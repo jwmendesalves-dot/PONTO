@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0e16">
+<title>Cadastro — Ponto Digital</title>
+<link rel="stylesheet" href="/ui-kit.css">
+<style>
+  body { padding:26px 16px 48px; }
+  .wrap { max-width:540px; margin:0 auto; }
+
+  .brand { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .brand .dot { width:12px; height:12px; border-radius:50%;
+    background:linear-gradient(135deg,#34d399,#10b981); box-shadow:0 0 16px rgba(52,211,153,.8); }
+  .brand .name { font-size:16px; font-weight:700; letter-spacing:-.2px; }
+  .sub { font-size:12.5px; color:var(--muted); margin-bottom:22px; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; margin-bottom:16px; box-shadow:var(--shadow); animation:rise .35s ease both; }
+  .card h2 { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+  label { display:block; font-size:12.5px; font-weight:500; color:var(--muted); margin:0 0 6px; }
+  input[type=password], input[type=text], select {
+    width:100%; padding:13px 14px; font-size:15px; border-radius:12px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); outline:none; transition:border-color .2s, box-shadow .2s; }
+  input:focus, select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(79,70,229,.16); }
+  input::placeholder { color:var(--muted); opacity:.7; }
+
+  .video-wrap { position:relative; border-radius:16px; overflow:hidden; background:#000;
+    aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; border:1px solid var(--border);
+    margin-top:16px; box-shadow:var(--shadow); }
+  video { width:100%; height:100%; object-fit:cover; }
+  .oval { position:absolute; width:46%; aspect-ratio:3/4; border-radius:50% / 42%;
+    border:2px dashed rgba(255,255,255,.45); pointer-events:none; }
+  .video-wrap .badge { position:absolute; top:10px; left:10px; z-index:2; }
+
+  .btn-largo { width:100%; padding:15px; font-size:16px; letter-spacing:.2px; }
+  .nav { display:flex; gap:10px; margin-top:14px; }
+  .nav .btn { flex:1; }
+  .btn:disabled { opacity:.45; cursor:default; }
+
+  .msg { margin-top:14px; font-size:14px; min-height:20px; text-align:center; font-weight:600; }
+  .msg.ok { color:var(--ok); }
+  .msg.bad { color:var(--perigo); }
+
+  .termo { font-size:13.5px; color:var(--muted); line-height:1.6; }
+  .termo a { color:var(--primary); font-weight:600; }
+  .termo-aceite { display:flex; gap:9px; align-items:flex-start; margin:14px 0 0;
+    font-size:13.5px; color:var(--text); cursor:pointer; }
+  .termo-aceite input { width:18px; height:18px; margin-top:1px; flex:0 0 auto; accent-color:var(--primary); }
+
+  .item { display:flex; align-items:center; gap:11px; padding:12px 13px; background:var(--bg);
+    border:1px solid var(--border); border-radius:12px; margin-bottom:8px; font-size:14px; transition:border-color .15s; }
+  .item:hover { border-color:var(--primary); }
+  .item .avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#334155,#475569);
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex:0 0 auto; }
+  .item .nome { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item button { background:transparent; border:1px solid var(--perigo); color:var(--perigo);
+    border-radius:9px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; transition:background .15s; }
+  .item button:hover { background:var(--perigo-bg); }
+  .vazio { color:var(--muted); font-size:13px; padding:8px 2px; text-align:center; }
+
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<div class="brand">
+  <span class="dot"></span>
+  <span class="name">Cadastro de colaboradores</span>
+</div>
+<div class="sub">Área do RH · cadastre o rosto de cada colaborador</div>
+
+<div class="card">
+  <div class="stepper">
+    <span class="passo ativo">1 Dados</span>
+    <span class="passo">2 Foto</span>
+    <span class="passo">3 Grupo</span>
+    <span class="passo">4 Termo</span>
+  </div>
+
+  <section class="passo ativo">
+    <h2>Acesso</h2>
+    <label>Usuário</label>
+    <input type="text" id="usuario" placeholder="admin" autocomplete="username">
+    <label>Senha de acesso</label>
+    <input type="password" id="senha" placeholder="••••••••••••••" autocomplete="current-password">
+    <label>Nome completo</label>
+    <input type="text" id="nome" placeholder="Ex.: Maria Silva">
+  </section>
+
+  <section class="passo">
+    <h2>Foto</h2>
+    <div class="video-wrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="oval"></div>
+      <span class="badge aviso" id="badgeQualidade">validando qualidade…</span>
+    </div>
+  </section>
+
+  <section class="passo">
+    <h2>Grupo</h2>
+    <label>Grupo / escala</label>
+    <select id="grupo"><option value="">sem grupo (corrigir depois)</option></select>
+  </section>
+
+  <section class="passo">
+    <h2>Termo</h2>
+    <p class="termo">
+      Finalidade: registro de ponto por biometria facial.<br>
+      Base legal: execução de contrato e obrigação legal trabalhista.<br>
+      Direitos: acesso, correção e eliminação dos dados via RH.
+      <a href="/compliance/aviso-privacidade.md" target="_blank" rel="noopener">ler o texto completo</a>
+    </p>
+    <label class="termo-aceite"><input type="checkbox" id="termo"> Li e aceito o aviso de privacidade (LGPD)</label>
+  </section>
+
+  <div class="nav">
+    <button class="btn btn-ghost btn-largo" id="btnVoltar" type="button">Voltar</button>
+    <button class="btn btn-primary btn-largo" id="btnCad" type="button" disabled>Avançar</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="card">
+  <h2>Cadastrados</h2>
+  <div id="lista"></div>
+</div>
+</div>
+
+<script src="/ui-kit.js"></script>
+<script>
+const video = document.getElementById('video');
+const senha = document.getElementById('senha');
+const usuario = document.getElementById('usuario');
+const nome = document.getElementById('nome');
+const btnCad = document.getElementById('btnCad');
+const msg = document.getElementById('msg');
+const lista = document.getElementById('lista');
+
+function tokenAtual() { return localStorage.getItem('ponto_token') || ''; }
+
+function authHeaders(extra) {
+  const h = extra || {};
+  const t = tokenAtual();
+  if (t) h['Authorization'] = 'Bearer ' + t;
+  return h;
+}
+
+async function entrar() {
+  const u = usuario.value.trim(), s = senha.value;
+  if (!u || !s) return false;
+  try {
+    const r = await fetch('/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({usuario:u, senha:s}),
+    });
+    const d = await r.json();
+    if (r.ok && d && d.token) { localStorage.setItem('ponto_token', d.token); return true; }
+  } catch (e) {}
+  localStorage.removeItem('ponto_token');
+  return false;
+}
+
+let passo = 1;
+function setPasso(n) {
+  passo = n;
+  document.querySelectorAll('.stepper .passo').forEach((s, i) => s.classList.toggle('ativo', i === n - 1));
+  document.querySelectorAll('section.passo').forEach((s, i) => s.classList.toggle('ativo', i === n - 1));
+  btnCad.textContent = n < 4 ? 'Avançar' : 'Cadastrar';
+  document.getElementById('btnVoltar').style.display = n > 1 ? '' : 'none';
+  if (n === 3) carregarGrupos();
+}
+
+async function carregarGrupos() {
+  const sel = document.getElementById('grupo');
+  if (!tokenAtual() && !(await entrar())) return;
+  fetch('/api/configuracao', { headers: authHeaders() })
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => {
+      if (!d) return;
+      sel.innerHTML = '<option value="">sem grupo (corrigir depois)</option>';
+      for (const g of d.grupos || []) {
+        const o = document.createElement('option');
+        o.value = g.id; o.textContent = g.nome;
+        sel.appendChild(o);
+      }
+    })
+    .catch(() => {});
+}
+
+async function initCam() {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:'user', width:{ideal:960}, height:{ideal:720} }, audio:false,
+    });
+    video.srcObject = s; await video.play();
+    btnCad.disabled = false;
+  } catch (e) { setMsg('câmera bloqueada — libere e recarregue', false); }
+}
+
+function fotoAtual() {
+  const c = document.createElement('canvas');
+  c.width = video.videoWidth; c.height = video.videoHeight;
+  c.getContext('2d').drawImage(video, 0, 0);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+
+function setMsg(t, ok) { msg.textContent = t; msg.className = 'msg ' + (ok ? 'ok' : 'bad'); }
+
+async function cadastrar() {
+  if (passo < 4) return setPasso(passo + 1);
+  if (!document.getElementById('termo').checked) {
+    toast('aceite o termo de privacidade para concluir', 'aviso');
+    return;
+  }
+  const n = nome.value.trim();
+  if (!usuario.value.trim() || !senha.value) return setMsg('digite usuário e senha', false);
+  if (!tokenAtual() && !(await entrar())) return setMsg('usuário ou senha inválidos', false);
+  if (!n) return setMsg('digite o nome do colaborador', false);
+  const gid = document.getElementById('grupo').value;
+  btnCad.disabled = true; setMsg('reconhecendo rosto…', null);
+  try {
+    const r = await fetch('/api/cadastrar', {
+      method:'POST', headers:authHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({ nome:n, foto_base64:fotoAtual(), grupo_id: gid ? Number(gid) : null }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      if (gid) {
+        // vínculo de grupo enviado no submit (rota de vínculos do gestor)
+        await fetch('/api/colaborador/' + encodeURIComponent(d.nome) + '/vinculos', {
+          method:'PUT', headers:authHeaders({'Content-Type':'application/json'}),
+          body: JSON.stringify({ grupo_id: Number(gid) }),
+        });
+      }
+      setMsg('✓ ' + d.nome + ' cadastrado', true); nome.value=''; carregarLista();
+    }
+    else setMsg('erro: ' + (d.detail || d.motivo || 'desconhecido'), false);
+  } catch (e) { setMsg('falha de rede', false); }
+  finally { btnCad.disabled = false; }
+}
+
+async function carregarLista() {
+  if (!tokenAtual()) return;
+  try {
+    const r = await fetch('/api/colaboradores', {headers:authHeaders()});
+    const d = await r.json();
+    lista.innerHTML = '';
+    if (!d.colaboradores.length) { lista.innerHTML = '<div class="vazio">nenhum colaborador cadastrado ainda</div>'; return; }
+    for (const c of d.colaboradores) {
+      const div = document.createElement('div'); div.className = 'item';
+      const av = document.createElement('span'); av.className = 'avatar'; av.textContent = (c.nome[0]||'?').toUpperCase();
+      const nm = document.createElement('span'); nm.className = 'nome'; nm.textContent = c.nome;
+      const del = document.createElement('button'); del.textContent = 'excluir';
+      del.onclick = () => {
+        confirmarAcao({ titulo:'Excluir colaborador', texto:'Excluir ' + c.nome + '?', confirmar:'Excluir' })
+          .then(async (ok) => {
+            if (!ok) return;
+            await fetch('/api/colaborador/' + encodeURIComponent(c.nome), { method:'DELETE', headers:authHeaders() });
+            carregarLista();
+          });
+      };
+      div.appendChild(av); div.appendChild(nm); div.appendChild(del); lista.appendChild(div);
+    }
+  } catch (e) {}
+}
+
+btnCad.addEventListener('click', cadastrar);
+document.getElementById('btnVoltar').addEventListener('click', () => setPasso(Math.max(1, passo - 1)));
+function aoAlterarCredenciais() {
+  if (senha.value && usuario.value.trim()) entrar().then(ok => { if (ok) carregarLista(); });
+}
+senha.addEventListener('change', aoAlterarCredenciais);
+usuario.addEventListener('change', aoAlterarCredenciais);
+initCam();
+carregarLista();
+setPasso(1);
+</script>
+
+<script type="module">
+// feedback de qualidade do rosto no passo Foto (mesma lógica do kiosk)
+import { FaceLandmarker, FilesetResolver } from '/mediapipe/vision_bundle.mjs';
+
+const badge = document.getElementById('badgeQualidade');
+const videoQ = document.getElementById('video');
+let faceLandmarker = null;
+
+async function initFace() {
+  const vision = await FilesetResolver.forVisionTasks('/mediapipe/wasm');
+  for (const delegate of ['GPU', 'CPU']) {
+    try {
+      faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: '/mediapipe/face_landmarker.task', delegate },
+        runningMode: 'VIDEO', numFaces: 1,
+        outputFaceBlendshapes: false, outputFacialTransformationMatrixes: false,
+      });
+      break;
+    } catch (e) { /* tenta o próximo delegate */ }
+  }
+}
+
+function avaliar(lm) {
+  let minX = 1, minY = 1, maxX = 0, maxY = 0;
+  for (const p of lm) { if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                        if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y; }
+  const le = lm[33], re = lm[263], nose = lm[1];
+  const eyeDist = Math.hypot(re.x - le.x, re.y - le.y) || 1e-6;
+  const dev = Math.abs(nose.x - (le.x + re.x) / 2) / eyeDist;   // frontalidade
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const central = Math.hypot(cx - 0.5, cy - 0.52);
+  return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY, cx, cy, dev, central };
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  if (!faceLandmarker || !videoQ || !videoQ.videoWidth) return;
+  let res;
+  try { res = faceLandmarker.detectForVideo(videoQ, performance.now()); } catch (e) { return; }
+
+  let ok = false, parcial = false, texto = 'posicione o rosto dentro do círculo';
+  if (res.faceLandmarks && res.faceLandmarks.length > 0) {
+    const a = avaliar(res.faceLandmarks[0]);
+    const tamanhoOk = a.w >= 0.28 && a.w <= 0.7;
+    const centralOk = a.central < 0.16;
+    const frontalOk = a.dev < 0.38;
+    if (frontalOk && tamanhoOk && centralOk) { ok = true; texto = 'rosto com boa qualidade'; }
+    else {
+      parcial = true;
+      if (!frontalOk) texto = 'olhe de frente para a câmera';
+      else if (!tamanhoOk) texto = a.w < 0.28 ? 'aproxime o rosto' : 'afaste um pouco';
+      else if (!centralOk) texto = 'centralize o rosto no círculo';
+    }
+  }
+  badge.className = 'badge ' + (ok ? 'ok' : parcial ? 'aviso' : 'perigo');
+  badge.textContent = texto;
+}
+
+initFace().then(() => {
+  if (!faceLandmarker) {
+    badge.className = 'badge aviso';
+    badge.textContent = 'validação de rosto indisponível';
+    return;
+  }
+  loop();
+}).catch(() => {
+  badge.className = 'badge aviso';
+  badge.textContent = 'validação de rosto indisponível';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0f19">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<title>Ponto Digital</title>
+<link rel="stylesheet" href="/ui-kit.css">
+<style>
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:400; font-display:swap;
+    src:url('/fonts/latin-400-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:500; font-display:swap;
+    src:url('/fonts/latin-500-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:600; font-display:swap;
+    src:url('/fonts/latin-600-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:700; font-display:swap;
+    src:url('/fonts/latin-700-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:800; font-display:swap;
+    src:url('/fonts/latin-800-normal.woff2') format('woff2'); }
+
+  :root {
+    --bg:#0a0e1a; --card:#131a2b; --card-2:#0f1626; --line:#232c3e; --line-2:#1b2436;
+    --txt:#e8eef7; --mut:#8b98ad; --faint:#5c6a7f;
+    --ok:#22c55e; --bad:#ef4444; --amb:#f59e0b; --accent:#3b82f6; --accent-2:#2563eb;
+    --radius:16px; --shadow:0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.45);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; color:var(--txt); overflow:hidden;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; }
+  body { display:flex; flex-direction:column;
+    background:radial-gradient(1000px 620px at 50% -12%, #17233c 0%, var(--bg) 58%); }
+
+  header { display:flex; align-items:center; justify-content:space-between; padding:18px 22px 12px; }
+  .brand { display:flex; align-items:center; gap:11px; }
+  .header-side { display:flex; align-items:center; gap:12px; }
+  #btnFull { width:38px; height:38px; border-radius:11px; border:1px solid var(--line);
+    background:var(--card); color:var(--mut); font-size:17px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); transition:all .15s; }
+  #btnFull:hover { color:var(--txt); border-color:var(--accent); }
+  #btnFull:active { transform:scale(.92); }
+  .brand .mark { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#3b82f6,#2563eb);
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff;
+    box-shadow:0 6px 18px -4px rgba(37,99,235,.55); }
+  .brand .name { font-size:15px; font-weight:600; color:var(--txt); letter-spacing:-.2px; }
+  .clock { text-align:right; }
+  .clock .hora { font-size:44px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:.5px; line-height:1; }
+  .clock .data { font-size:10.5px; color:var(--mut); letter-spacing:.7px; text-transform:uppercase; margin-top:3px; }
+
+  .stage { flex:1; position:relative; margin:8px 18px 10px; border-radius:20px; overflow:hidden;
+    background:#05070d; border:1px solid var(--line); min-height:0; box-shadow:var(--shadow); }
+  video { width:100%; height:100%; object-fit:cover; display:block; }
+  #faceCanvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .stage::after { content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(5,7,13,.22) 0%, transparent 28%, transparent 72%, rgba(5,7,13,.32) 100%); }
+  .guide { position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; }
+  .guide .oval { width:54%; max-width:250px; aspect-ratio:3/4; border-radius:50% / 42%;
+    border:2px dashed rgba(255,255,255,.32); transition:border-color .3s, box-shadow .3s;
+    box-shadow:0 0 0 9999px rgba(2,6,23,.55);
+    animation:breathe 3.4s ease-in-out infinite, borda-pulse 2.2s ease-in-out infinite; }
+  .guide .oval.hit { border-color:var(--ok); border-width:2.5px; animation:none;
+    box-shadow:0 0 0 9999px rgba(2,6,23,.55), 0 0 0 6px rgba(34,197,94,.14), 0 0 46px rgba(34,197,94,.28); }
+  .guide .oval.ok { border-color:var(--ok); border-width:2.5px; animation:none;
+    box-shadow:0 0 0 9999px rgba(2,6,23,.55), 0 0 0 6px rgba(34,197,94,.14), 0 0 46px rgba(34,197,94,.28); }
+  .guide .oval.warn { border-color:#f59e0b; animation:none;
+    box-shadow:0 0 0 9999px rgba(2,6,23,.55), 0 0 0 6px rgba(245,158,11,.12); }
+  .guide .liveness { position:absolute; top:16px; right:16px; z-index:2; }
+  .guide .dica { position:absolute; bottom:16px; left:0; right:0; text-align:center;
+    font-size:13.5px; font-weight:500; color:#cbd5e1; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+
+  /* seletor de tipo — discreto, com setas */
+  .seletor { display:flex; align-items:center; justify-content:center; gap:14px; padding:4px 18px 6px; }
+  .seletor .seta { width:40px; height:40px; border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--mut); font-size:20px; cursor:pointer; display:flex;
+    align-items:center; justify-content:center; user-select:none; box-shadow:var(--shadow); transition:all .15s; }
+  .seletor .seta:hover { color:var(--txt); border-color:var(--accent); }
+  .seletor .seta:active { transform:scale(.92); background:var(--card-2); }
+  .seletor .atual { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:132px; }
+  .seletor .atual .rot { font-size:10px; font-weight:600; color:var(--faint); text-transform:uppercase; letter-spacing:1.2px; }
+  .seletor .atual .tipo { font-size:21px; font-weight:700; display:flex; align-items:center; gap:7px; letter-spacing:-.2px; }
+  .t-entrada { color:#6ee7b7; } .t-pausa { color:#fbbf24; }
+  .t-volta { color:#7dd3fc; } .t-termino { color:#fca5a5; }
+
+  footer { padding:10px 18px 18px; }
+  #btnPonto { width:100%; padding:19px; font-size:17px; font-weight:700; letter-spacing:.2px; border:none;
+    border-radius:16px; cursor:pointer; color:#fff; background:linear-gradient(135deg,#22c55e,#16a34a);
+    box-shadow:0 12px 28px -10px rgba(34,197,94,.55); transition:transform .12s, opacity .2s, filter .2s, box-shadow .2s; }
+  #btnPonto:hover:not(:disabled) { filter:brightness(1.05); box-shadow:0 14px 34px -10px rgba(34,197,94,.65); }
+  #btnPonto:active:not(:disabled) { transform:scale(.98); }
+  #btnPonto:disabled { opacity:.4; box-shadow:none; }
+  .sub { text-align:center; font-size:11.5px; color:var(--faint); padding:0 18px 10px; min-height:15px; }
+
+  .result { position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
+    justify-content:center; gap:8px; background:rgba(6,9,15,.88); backdrop-filter:blur(8px);
+    text-align:center; padding:24px; z-index:10; }
+  .result.show { display:flex; }
+  .check { width:88px; height:88px; margin-bottom:4px; }
+  .check circle { fill:none; stroke-width:2.5; }
+  .check.ok circle { stroke:var(--ok); }
+  .check.bad circle { stroke:var(--bad); }
+  .check path { fill:none; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round; }
+  .check.ok path { stroke:#fff; stroke-dasharray:60; stroke-dashoffset:60; animation:draw .45s .15s ease forwards; }
+  .check.bad path { stroke:#fff; }
+  .result .tipo { font-size:13px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#8296ad; }
+  .result .nome { font-size:34px; font-weight:800; line-height:1.1; letter-spacing:-.5px; }
+  .result.ok .nome { color:var(--ok); }
+  .result.bad .nome { color:var(--bad); }
+  .result .hora { font-size:20px; color:#cbd5e1; font-variant-numeric:tabular-nums; }
+  .result .msg { font-size:13.5px; color:var(--mut); max-width:320px; line-height:1.45; }
+  .result .avatar { width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,.1);
+    border:2px solid rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:800; letter-spacing:.5px; color:#fff; margin-bottom:2px; }
+  .result .nsr { font-size:12px; color:var(--mut); font-variant-numeric:tabular-nums; letter-spacing:.6px; }
+  .result .comprovante { max-width:340px; max-height:180px; overflow:auto; text-align:left;
+    font-size:11px; line-height:1.5; color:#cbd5e1; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:10px 12px;
+    white-space:pre-wrap; word-break:break-all; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  @keyframes pop { 0%{transform:scale(.72);opacity:0} 100%{transform:scale(1);opacity:1} }
+  @keyframes breathe { 0%,100% { box-shadow:0 0 0 9999px rgba(2,6,23,.55), 0 0 0 0 rgba(255,255,255,.05); } 50% { box-shadow:0 0 0 9999px rgba(2,6,23,.55), 0 0 0 12px rgba(255,255,255,.02); } }
+  @keyframes borda-pulse { 0%,100% { border-color:rgba(255,255,255,.32); } 50% { border-color:var(--primary); } }
+  .result.show .check { animation:pop .32s ease; }
+
+  .aviso { position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
+    justify-content:center; gap:8px; text-align:center; padding:24px; z-index:20; }
+  .aviso.show { display:flex; }
+  .aviso .aviso-titulo { font-size:40px; font-weight:800; line-height:1.05; letter-spacing:-.5px; }
+  .aviso .aviso-sub { font-size:16px; font-weight:600; opacity:.85; }
+  .aviso.atrasado { background:rgba(99,12,12,.94); color:#fff; }
+  .aviso.atrasado .aviso-titulo { color:#fecaca; }
+  .aviso.antecipado { background:rgba(13,64,35,.94); color:#fff; }
+  .aviso.antecipado .aviso-titulo { color:#bbf7d0; }
+
+  @media (max-width:480px) {
+    header { padding:14px 16px 10px; }
+    .clock .hora { font-size:32px; }
+    .stage { margin:6px 12px 8px; border-radius:16px; }
+    .seletor { padding:2px 12px 4px; }
+    #btnPonto { padding:17px; font-size:16px; }
+    .guide .oval { max-width:210px; }
+  }
+</style>
+</head>
+<body class="tema-totem">
+
+<header>
+  <div class="brand"><span class="mark">⏱</span><span class="name">Ponto Digital</span>
+    <span class="badge" id="badgeServidor">online</span>
+  </div>
+  <div class="header-side">
+    <button id="btnFull" title="Tela cheia" aria-label="Alternar tela cheia">⛶</button>
+    <div class="clock"><div class="hora" id="hora">--:--</div><div class="data" id="data"></div></div>
+  </div>
+</header>
+
+<div class="stage">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="faceCanvas"></canvas>
+  <div class="guide">
+    <div class="oval" id="oval"></div>
+    <div class="dica" id="dica">posicione o rosto dentro do círculo</div>
+    <span class="badge perigo liveness" id="badgeLiveness">Não validado</span>
+  </div>
+  <div class="result" id="result">
+    <svg class="check" id="check" viewBox="0 0 86 86">
+      <circle cx="43" cy="43" r="39"/>
+      <path id="checkPath" d="M27 44 l11 11 l21 -22"/>
+    </svg>
+    <div class="avatar" id="rAvatar"></div>
+    <div class="tipo" id="rTipo"></div>
+    <div class="nome" id="rName"></div>
+    <div class="hora" id="rHora"></div>
+    <div class="nsr" id="rNsr"></div>
+    <div class="msg" id="rMsg"></div>
+    <button class="btn btn-ghost" id="btnComprovante">Ver comprovante</button>
+    <pre class="comprovante" id="rComprovante" hidden></pre>
+  </div>
+  <div class="aviso" id="aviso" hidden></div>
+</div>
+
+<div class="sub">o sistema define o tipo</div>
+
+<footer>
+  <button id="btnPonto" disabled>📸 Bater ponto</button>
+</footer>
+<input type="file" id="fotoFallback" accept="image/*" capture="user" hidden>
+<div class="sub" id="status">ativando câmera…</div>
+
+<script src="/ui-kit.js"></script>
+<script>
+const video = document.getElementById('video');
+const btnPonto = document.getElementById('btnPonto');
+const statusEl = document.getElementById('status');
+const dica = document.getElementById('dica');
+const oval = document.getElementById('oval');
+const result = document.getElementById('result');
+const check = document.getElementById('check');
+const checkPath = document.getElementById('checkPath');
+const rTipo = document.getElementById('rTipo');
+const rName = document.getElementById('rName');
+const rHora = document.getElementById('rHora');
+const rMsg = document.getElementById('rMsg');
+const aviso = document.getElementById('aviso');
+const rAvatar = document.getElementById('rAvatar');
+const rNsr = document.getElementById('rNsr');
+const btnComprovante = document.getElementById('btnComprovante');
+const rComprovante = document.getElementById('rComprovante');
+const badgeLiveness = document.getElementById('badgeLiveness');
+const badgeServidor = document.getElementById('badgeServidor');
+
+const TIPOS = [
+  { id:null,     nome:'Automático', cls:'', icone:'✨', reg:'' },
+  { id:'entrada', nome:'Entrada', cls:'t-entrada', icone:'▶', reg:'registrada' },
+  { id:'pausa',   nome:'Início Intervalo', cls:'t-pausa', icone:'⏸', reg:'registrado' },
+  { id:'volta',   nome:'Fim Intervalo', cls:'t-volta', icone:'↺', reg:'registrado' },
+  { id:'termino', nome:'Saída', cls:'t-termino', icone:'■', reg:'registrada' },
+];
+let local = null;
+let ultimoComprovante = null;   // comprovante devolvido por /api/reconhecer
+
+/* relógio */
+function tick() {
+  const now = new Date();
+  document.getElementById('hora').textContent = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('data').textContent = now.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long' });
+}
+tick(); setInterval(tick, 1000);
+
+/* indicador de servidor — badge online/offline no topo (novo) */
+async function checarServidor() {
+  try {
+    const r = await fetch('/api/health');
+    badgeServidor.className = 'badge ' + (r.ok ? 'ok' : 'perigo');
+    badgeServidor.textContent = r.ok ? 'online' : 'offline';
+  } catch (e) {
+    badgeServidor.className = 'badge perigo';
+    badgeServidor.textContent = 'offline';
+  }
+}
+checarServidor(); setInterval(checarServidor, 30000);
+
+/* status de liveness ao lado do oval */
+let livenessEstado = null;
+function atualizarLiveness(estado) {
+  if (estado === livenessEstado) return;
+  livenessEstado = estado;
+  const mapa = {
+    ok:         { cls:'badge ok',      txt:'Liveness OK' },
+    validando:  { cls:'badge aviso',   txt:'Validando…' },
+    nao:        { cls:'badge perigo',  txt:'Não validado' },
+  };
+  const m = mapa[estado] || mapa.nao;
+  badgeLiveness.className = m.cls + ' liveness';
+  badgeLiveness.textContent = m.txt;
+}
+atualizarLiveness('nao');
+
+function capturarLocal() {
+  return new Promise(res => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(
+      p => res({ lat:p.coords.latitude, lng:p.coords.longitude }),
+      () => res(null), { enableHighAccuracy:true, timeout:5000 });
+  });
+}
+
+let temStream = false;
+
+function escolherFoto() {
+  return new Promise((resolve) => {
+    const inp = document.getElementById('fotoFallback');
+    inp.onchange = () => {
+      const file = inp.files[0];
+      inp.value = '';
+      if (!file) return resolve(null);
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.readAsDataURL(file);
+    };
+    inp.click();
+  });
+}
+
+async function initCam() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:'user', width:{ideal:1280}, height:{ideal:720} }, audio:false });
+    video.srcObject = stream; await video.play();
+    temStream = true;
+    btnPonto.disabled = true;   // aguarda o rosto ficar bem posicionado (oval verde)
+    statusEl.textContent = 'posicione o rosto dentro do círculo';
+  } catch (e) {
+    // câmera direta indisponível (navegador embutido/Silk): cai no seletor nativo
+    temStream = false;
+    video.style.display = 'none';
+    dica.textContent = 'câmera direta indisponível neste aparelho';
+    statusEl.textContent = 'toque em "bater ponto" para tirar a foto pelo sistema';
+    btnPonto.disabled = false;
+  }
+}
+
+// libera o botão só quando a detecção em tempo real confirma o rosto bem posicionado
+document.addEventListener('rosto', (e) => {
+  if (!temStream) return;
+  btnPonto.disabled = !e.detail.ok;
+  if (e.detail.ok) statusEl.textContent = 'rosto detectado — pode bater o ponto';
+});
+
+const ERROS = {
+  401: 'rosto não reconhecido — procure o RH',
+  403: 'presença não validada — bata o ponto pessoalmente',
+  409: 'nenhum colaborador cadastrado ainda',
+  422: 'nenhum rosto detectado — aproxime-se',
+};
+
+function mostrarResultado(ok, tipo, nome, msg) {
+  check.setAttribute('class', 'check ' + (ok ? 'ok' : 'bad'));
+  checkPath.setAttribute('d', ok ? 'M27 44 l11 11 l21 -22' : 'M32 32 l22 22 M54 32 l-22 22');
+  checkPath.style.animation = 'none';
+  void checkPath.getBoundingClientRect();
+  if (ok) checkPath.style.animation = '';
+  result.className = 'result show ' + (ok ? 'ok' : 'bad');
+  rTipo.textContent = tipo || '';
+  rName.textContent = ok ? nome : (nome || 'Não reconhecido');
+  rHora.textContent = new Date().toLocaleTimeString('pt-BR');
+  rMsg.textContent = msg || '';
+  if (ok && nome) {
+    rAvatar.textContent = nome.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+  } else {
+    rAvatar.textContent = '';
+  }
+  rNsr.textContent = (ok && ultimoComprovante && ultimoComprovante.nsr !== undefined)
+    ? 'NSR ' + ultimoComprovante.nsr : '';
+  btnComprovante.style.display = (ok && ultimoComprovante) ? '' : 'none';
+  rComprovante.hidden = true;
+  rComprovante.textContent = '';
+  if (msg) toast(msg, ok ? 'ok' : 'erro');
+  setTimeout(() => { if (!rComprovante.hidden) return; result.className = 'result'; }, 4500);
+}
+
+function mostrarAviso(atraso_min, nome) {
+  if (atraso_min > 0) {
+    aviso.className = 'aviso show atrasado';
+    aviso.innerHTML = '<div class="aviso-titulo">⏰ ATRASADO ' + atraso_min + ' MIN</div>' +
+      '<div class="aviso-sub">' + (nome || '') + ' — aviso enviado ao responsável</div>';
+    toast('⏰ ATRASADO ' + atraso_min + ' MIN — ' + (nome || '') + ' — aviso enviado ao responsável', 'aviso');
+  } else if (atraso_min < 0) {
+    aviso.className = 'aviso show antecipado';
+    aviso.innerHTML = '<div class="aviso-titulo">🎉 BOA JOVEMMMMM!</div>' +
+      '<div class="aviso-sub">' + (nome || '') + ' chegou adiantado</div>';
+    toast('🎉 BOA JOVEMMMMM! ' + (nome || '') + ' chegou adiantado', 'ok');
+  } else {
+    return; // pontual, sem aviso
+  }
+  aviso.hidden = false;
+  setTimeout(() => { aviso.hidden = true; aviso.className = 'aviso'; }, 5000);
+}
+
+async function baterPonto() {
+  btnPonto.disabled = true;
+  btnPonto.textContent = '⏳ Verificando…';
+  statusEl.textContent = 'reconhecendo rosto…';
+  oval.classList.add('hit');
+  local = local || await capturarLocal();
+  let foto1, foto2 = null;
+  if (temStream) {
+    // captura 2 frames com intervalo p/ liveness por movimento (anti-foto/print)
+    const c = document.createElement('canvas');
+    c.width = video.videoWidth; c.height = video.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    foto1 = c.toDataURL('image/jpeg', 0.85);
+    await new Promise(r => setTimeout(r, 250));
+    ctx.drawImage(video, 0, 0);
+    foto2 = c.toDataURL('image/jpeg', 0.85);
+  } else {
+    // fallback: foto via seletor nativo (sem 2º frame -> sem liveness por movimento)
+    foto1 = await escolherFoto();
+    if (!foto1) { btnPonto.disabled = false; oval.classList.remove('hit'); return; }
+  }
+  const body = { foto_base64: foto1 };
+  if (foto2) body.foto_base64_2 = foto2;
+  if (local) { body.lat = local.lat; body.lng = local.lng; }
+  try {
+    const r = await fetch('/api/reconhecer', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (r.ok) {
+      ultimoComprovante = d.comprovante || { nsr: d.nsr };
+      // rótulos novos de display (Entrada / Início Intervalo / Fim Intervalo / Saída)
+      const t = TIPOS.find(x => x.id === d.tipo);
+      const frase = (t && t.reg)
+        ? t.nome + ' ' + t.reg + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })
+        : (d.tipo_nome || '');
+      mostrarResultado(true, frase, d.nome, 'ponto registrado com sucesso');
+      if (d.tipo === 'entrada' && d.atraso_min !== undefined) {
+        mostrarAviso(d.atraso_min, d.nome);
+      }
+    } else {
+      ultimoComprovante = null;
+      // 403 (fraude/presença) mostra o motivo detalhado vindo do backend
+      const msg = (r.status === 403)
+        ? (d.motivo || ERROS[403])
+        : (ERROS[r.status] || d.motivo || 'não reconhecido');
+      mostrarResultado(false, null, null, msg);
+    }
+  } catch (e) {
+    ultimoComprovante = null;
+    mostrarResultado(false, null, 'Erro', 'sem conexão com o servidor');
+  } finally {
+    btnPonto.textContent = '📸 Bater ponto';
+    setTimeout(() => { btnPonto.disabled = false; oval.classList.remove('hit'); }, 1400);
+  }
+}
+
+btnPonto.addEventListener('click', baterPonto);
+btnComprovante.addEventListener('click', () => {
+  rComprovante.hidden = !rComprovante.hidden;
+  btnComprovante.textContent = rComprovante.hidden ? 'Ver comprovante' : 'Ocultar comprovante';
+  if (!rComprovante.hidden && ultimoComprovante) {
+    rComprovante.textContent = JSON.stringify(ultimoComprovante, null, 2);
+  }
+  if (rComprovante.hidden) setTimeout(() => { result.className = 'result'; }, 4500);
+});
+const btnFull = document.getElementById('btnFull');
+btnFull.addEventListener('click', () => {
+  const el = document.documentElement;
+  if (!document.fullscreenElement && (el.requestFullscreen || el.webkitRequestFullscreen)) {
+    (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } else if (document.exitFullscreen) {
+    document.exitFullscreen();
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  btnFull.textContent = document.fullscreenElement ? '⇱' : '⛶';
+});
+initCam();
+</script>
+
+<script type="module">
+import { FaceLandmarker, FilesetResolver } from '/mediapipe/vision_bundle.mjs';
+
+const faceCanvas = document.getElementById('faceCanvas');
+const fctx = faceCanvas.getContext('2d');
+let faceLandmarker = null;
+let okPrev = null;
+window.__rosto = { ok: false, ready: false, status: 'ativando…' };
+
+async function initFace() {
+  const vision = await FilesetResolver.forVisionTasks('/mediapipe/wasm');
+  for (const delegate of ['GPU', 'CPU']) {
+    try {
+      faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: '/mediapipe/face_landmarker.task', delegate },
+        runningMode: 'VIDEO', numFaces: 1,
+        outputFaceBlendshapes: false, outputFacialTransformationMatrixes: false,
+      });
+      break;
+    } catch (e) { /* tenta o próximo delegate */ }
+  }
+  window.__rosto.ready = true;
+}
+
+function avaliar(lm) {
+  let minX = 1, minY = 1, maxX = 0, maxY = 0;
+  for (const p of lm) { if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                        if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y; }
+  const le = lm[33], re = lm[263], nose = lm[1];
+  const eyeDist = Math.hypot(re.x - le.x, re.y - le.y) || 1e-6;
+  const dev = Math.abs(nose.x - (le.x + re.x) / 2) / eyeDist;   // frontalidade
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const central = Math.hypot(cx - 0.5, cy - 0.52);
+  return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY, cx, cy, dev, central };
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  if (!faceLandmarker || !video || !video.videoWidth) return;
+  if (faceCanvas.width !== video.videoWidth) {
+    faceCanvas.width = video.videoWidth;
+    faceCanvas.height = video.videoHeight;
+  }
+  let res;
+  try { res = faceLandmarker.detectForVideo(video, performance.now()); } catch (e) { return; }
+  fctx.clearRect(0, 0, faceCanvas.width, faceCanvas.height);
+
+  let ok = false, parcial = false, msg = 'posicione o rosto dentro do círculo';
+  if (res.faceLandmarks && res.faceLandmarks.length > 0) {
+    const a = avaliar(res.faceLandmarks[0]);
+    const tamanhoOk = a.w >= 0.28 && a.w <= 0.7;
+    const centralOk = a.central < 0.16;
+    const frontalOk = a.dev < 0.38;
+    if (frontalOk && tamanhoOk && centralOk) { ok = true; msg = 'perfeito — toque em bater ponto'; }
+    else {
+      parcial = true;
+      if (!frontalOk) msg = 'olhe de frente para a câmera';
+      else if (!tamanhoOk) msg = a.w < 0.28 ? 'aproxime o rosto' : 'afaste um pouco';
+      else if (!centralOk) msg = 'centralize o rosto no círculo';
+    }
+    // desenha o contorno real do rosto
+    const cor = ok ? '#22c55e' : '#f59e0b';
+    fctx.strokeStyle = cor; fctx.lineWidth = 3; fctx.lineJoin = 'round';
+    fctx.beginPath();
+    fctx.ellipse(a.cx * faceCanvas.width, a.cy * faceCanvas.height,
+                 (a.w / 2) * faceCanvas.width, (a.h / 2) * faceCanvas.height,
+                 0, 0, 2 * Math.PI);
+    fctx.stroke();
+  }
+  oval.className = 'oval' + (ok ? ' ok' : parcial ? ' warn' : '');
+  dica.textContent = msg;
+  atualizarLiveness(ok ? 'ok' : parcial ? 'validando' : 'nao');
+  window.__rosto.status = msg;
+  if (ok !== okPrev) {
+    okPrev = ok;
+    window.__rosto.ok = ok;
+    document.dispatchEvent(new CustomEvent('rosto', { detail: { ok } }));
+  }
+}
+
+initFace().then(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,2821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<title>Ponto Digital · Dashboard</title>
+<link rel="stylesheet" href="/ui-kit.css">
+<style>
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:400; font-display:swap;
+    src:url('/fonts/latin-400-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:500; font-display:swap;
+    src:url('/fonts/latin-500-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:600; font-display:swap;
+    src:url('/fonts/latin-600-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:700; font-display:swap;
+    src:url('/fonts/latin-700-normal.woff2') format('woff2'); }
+  @font-face { font-family:'Inter'; font-style:normal; font-weight:800; font-display:swap;
+    src:url('/fonts/latin-800-normal.woff2') format('woff2'); }
+
+  :root {
+    --bg:#F8FAFC; --card:#FFFFFF; --card-2:#F8FAFC; --line:#E2E8F0; --line-2:#E2E8F0;
+    --txt:#0F172A; --mut:#64748B; --faint:#94A3B8;
+    --accent:#4F46E5; --accent-2:#4338CA;
+    --ok:#059669; --ok-bg:#ECFDF5;
+    --amb:#D97706; --amb-bg:#FFFBEB;
+    --bad:#E11D48;
+    --blue-bg:#EEF2FF; --slate-bg:#F1F5F9;
+    --sidebar:#FFFFFF; --sidebar-txt:#0F172A; --sidebar-mut:#64748B;
+    --radius:10px;
+    --shadow:0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    --shadow-lg:0 16px 40px rgba(15,23,42,.16);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { color-scheme:light; }
+  body { min-height:100vh; background:var(--bg); color:var(--txt);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; display:flex; }
+  a { color:inherit; text-decoration:none; }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:8px; border:2px solid var(--bg); }
+  ::-webkit-scrollbar-track { background:transparent; }
+  button, input, select { font-family:inherit; }
+  select, input[type=date], input[type=month], input[type=time] { color-scheme:light; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  .sidebar { width:236px; flex:0 0 236px; background:var(--sidebar); color:var(--sidebar-txt);
+    padding:22px 14px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+    border-right:1px solid var(--line-2); }
+  .logo { display:flex; align-items:center; gap:10px; padding:0 10px 22px; }
+  .logo .mark { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,#4F46E5,#4338CA);
+    display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#fff;
+    box-shadow:0 6px 16px -4px rgba(79,70,229,.45); }
+  .logo .name { font-size:15px; font-weight:700; color:var(--txt); letter-spacing:-.2px; }
+  .nav { display:flex; flex-direction:column; gap:3px; }
+  .nav a { display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px;
+    font-size:13.5px; font-weight:500; color:var(--sidebar-mut); cursor:pointer; transition:all .16s; }
+  .nav a:hover { background:var(--primary-bg); color:var(--accent); }
+  .nav a.active { background:var(--primary-bg); color:var(--accent); }
+  .nav a.active:hover { color:var(--accent); }
+  .nav a svg { width:17px; height:17px; flex:0 0 auto; }
+  /* botão "Link de cadastro" da sidebar eliminado (1 ocorrência só: btnCopiarLink) */
+  .sidebar .foot { margin-top:auto; padding:10px 12px; font-size:11.5px; color:var(--sidebar-mut);
+    border-top:1px solid var(--line); }
+
+  .main { flex:1; min-width:0; padding:26px 32px 60px; }
+  section:not([hidden]) { animation:rise .3s ease both; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+  .topbar h1 { font-size:22px; font-weight:700; letter-spacing:-.4px; }
+  .topbar .sub { font-size:13px; color:var(--mut); margin-top:3px; }
+  .topbar .actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  .date-pill { display:flex; align-items:center; gap:4px; background:var(--card); border:1px solid var(--line);
+    border-radius:10px; padding:2px; box-shadow:var(--shadow); }
+  .date-pill input[type=date] { border:none; background:transparent; padding:8px 10px; font-size:13px;
+    color:var(--txt); outline:none; font-family:inherit; }
+  .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 14px; font-size:13px; font-weight:600;
+    border-radius:10px; cursor:pointer; transition:all .16s; border:1px solid var(--line); background:var(--card);
+    color:var(--txt); box-shadow:var(--shadow); }
+  .btn:hover { border-color:#3b4a63; transform:translateY(-1px); }
+  .btn:active { transform:translateY(0); }
+  .btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .btn.primary:hover { background:var(--accent-2); border-color:var(--accent-2); }
+
+  /* design único de KPI: ver bloco "KpiCard unificado" abaixo */
+
+  .grid { display:grid; grid-template-columns:1.5fr 1fr; gap:16px; margin-bottom:16px; align-items:start; }
+  @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; }
+  .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px 0; flex-wrap:wrap; }
+  .panel-head h2 { font-size:14.5px; font-weight:700; letter-spacing:-.2px; min-width:0; overflow-wrap:anywhere; }
+  .panel-head .muted { font-size:12px; color:var(--mut); white-space:nowrap; }
+
+  .donut { position:relative; width:130px; height:130px; flex:0 0 130px; }
+  .donut svg { width:100%; height:100%; transform:rotate(-90deg); }
+  .donut .center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .donut .center .n { font-size:24px; font-weight:800; }
+  .donut .center .l { font-size:11px; color:var(--mut); }
+  .legend { display:flex; flex-direction:column; gap:9px; flex:1; }
+  .legend .row { display:flex; align-items:center; gap:9px; font-size:12.5px; }
+  .legend .dot { width:9px; height:9px; border-radius:3px; flex:0 0 auto; }
+  .legend .lbl { flex:1; color:var(--mut); }
+  .legend .n { font-weight:700; font-variant-numeric:tabular-nums; }
+  /* quadrado do donut (status da equipe) — vive como última caixa da linha de KPIs */
+  .donut-mini { display:flex; flex-direction:column; align-items:center; gap:7px;
+    box-sizing:border-box; align-self:stretch;
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:14px 12px; }
+  .donut-mini .donut { width:74px; height:74px; flex:0 0 74px; }
+  .donut-mini .donut .center .n { font-size:15px; letter-spacing:-.3px; }
+  .donut-mini .donut .center .l { font-size:8.5px; }
+  .donut-mini .legend { width:100%; gap:2px; }
+  .donut-mini .legend .row { gap:6px; font-size:10.5px; }
+  .donut-mini .legend .dot { width:7px; height:7px; border-radius:2px; }
+
+  .tbl-wrap { overflow-x:auto; padding:6px 8px 12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:12px 14px; font-size:11px; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--faint); font-weight:600; border-bottom:1px solid var(--line-2); white-space:nowrap; }
+  td { padding:13px 14px; border-bottom:1px solid var(--line-2); white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr { transition:background .12s; }
+  tbody tr:hover { background:var(--primary-bg); }
+  .cell-nome { display:flex; align-items:center; gap:11px; }
+  .avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700; color:#fff; flex:0 0 auto; }
+  .cell-nome .nm { font-weight:600; }
+  .cell-nome .dt { font-size:11.5px; color:var(--mut); }
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:600; }
+  .badge i { width:6px; height:6px; border-radius:50%; }
+  .badge.presente { background:var(--ok-bg); color:var(--ok); } .badge.presente i { background:var(--ok); }
+  .badge.em-pausa { background:var(--amb-bg); color:var(--amb); } .badge.em-pausa i { background:var(--amb); }
+  .badge.encerrado { background:var(--blue-bg); color:var(--accent); } .badge.encerrado i { background:var(--accent); }
+  .badge.ausente { background:var(--slate-bg); color:var(--mut); } .badge.ausente i { background:var(--faint); }
+  .t-horas { display:inline-block; padding:3px 9px; border-radius:7px; background:var(--blue-bg); color:var(--accent); font-weight:700; font-size:12px; }
+
+  .tipo { display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:12.5px; }
+  .tipo i { width:7px; height:7px; border-radius:50%; }
+  .tipo-entrada i { background:var(--ok); } .tipo-entrada { color:var(--ok); }
+  .tipo-pausa i { background:var(--amb); } .tipo-pausa { color:var(--amb); }
+  .tipo-volta i { background:var(--accent); } .tipo-volta { color:var(--accent); }
+  .tipo-termino i { background:#94a3b8; } .tipo-termino { color:#94a3b8; }
+  a.loc { color:var(--accent); font-size:12.5px; font-weight:500; }
+  a.loc:hover { text-decoration:underline; }
+  .vazio { padding:30px 20px; text-align:center; color:var(--mut); font-size:13px; }
+  .mono { font-variant-numeric:tabular-nums; }
+
+  .filtros { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:14px 20px 0; }
+  .filtros select, .filtros input[type=date] { padding:8px 11px; font-size:12.5px; border-radius:9px;
+    border:1px solid var(--line); background:var(--card-2); color:var(--txt); outline:none; }
+  .filtros select:focus, .filtros input[type=date]:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.16); }
+  /* Espelho: rótulos acima dos campos + atalhos de período junto ao Carregar */
+  .filtros.esp-filtros { align-items:flex-end; padding:16px 20px 14px; gap:10px; }
+  .filtros.esp-filtros .campo { gap:5px; }
+  .filtros.esp-filtros .atalhos { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .filtros.esp-filtros .atalhos .btn { padding:8px 12px; font-size:12.5px; }
+
+  /* login */
+  .login-body { background:radial-gradient(1000px 600px at 50% -10%, #EEF2FF 0%, var(--bg) 55%);
+    display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; flex:1; }
+  .login-card { background:var(--card); border-radius:18px; padding:40px 32px; width:100%; max-width:400px;
+    box-shadow:var(--shadow-lg); text-align:center; border:1px solid var(--line); animation:rise .35s ease both; }
+  .login-card .mark { width:52px; height:52px; border-radius:14px; margin:0 auto 18px;
+    background:linear-gradient(135deg,#4F46E5,#4338CA); display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:800; color:#fff; box-shadow:0 10px 28px -8px rgba(79,70,229,.5); }
+  .login-card h1 { font-size:19px; font-weight:700; margin-bottom:3px; letter-spacing:-.3px; }
+  .login-card p { font-size:13px; color:var(--mut); margin-bottom:24px; }
+  .login-card input { width:100%; padding:13px 14px; font-size:14px; border-radius:10px;
+    border:1px solid var(--line); background:var(--card-2); color:var(--txt); outline:none; text-align:center; margin-bottom:10px; }
+  .login-card input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.16); }
+  .login-card button { width:100%; margin-top:12px; padding:13px; font-size:14px; font-weight:600;
+    border:none; border-radius:10px; background:var(--accent); color:#fff; cursor:pointer; transition:background .15s; }
+  .login-card button:hover { background:var(--accent-2); }
+  .login-card .err { color:var(--bad); font-size:12px; margin-top:10px; min-height:16px; }
+
+  /* modal de extrato (classe .modal-tela para não colidir com .modal do ui-kit) */
+  .modal-tela { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; }
+  .modal-tela[hidden] { display:none; }
+  .modal-backdrop { position:absolute; inset:0; background:rgba(15,23,42,.45); backdrop-filter:blur(3px); }
+  .modal-card { position:relative; background:var(--card); border:1px solid var(--line); border-radius:18px;
+    width:min(680px, calc(100vw - 32px)); max-height:85vh; overflow:auto; box-shadow:var(--shadow-lg); animation:rise .28s ease both; }
+  .modal-head { display:flex; align-items:flex-start; justify-content:space-between; padding:20px 22px 0; }
+  .m-nome { font-size:19px; font-weight:700; letter-spacing:-.2px; }
+  .m-dados { font-size:12.5px; color:var(--mut); margin-top:3px; }
+  .modal-close { background:transparent; border:none; color:var(--mut); font-size:18px; cursor:pointer; padding:4px; }
+  .modal-close:hover { color:var(--txt); }
+  .m-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; padding:16px 22px 4px; }
+  .m-kpi { background:var(--card-2); border:1px solid var(--line); border-radius:12px; padding:13px; text-align:center; }
+  .m-kpi .v { font-size:18px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .m-kpi .v.pos { color:var(--ok); } .m-kpi .v.neg { color:var(--bad); }
+  .m-kpi .l { font-size:10.5px; color:var(--mut); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+  .m-tabela { padding:12px 22px 22px; overflow-x:auto; }
+  .m-tabela th, .m-tabela td { padding:9px 12px; }
+
+  /* grupos / configuração */
+  #grupos { display:flex; flex-direction:column; gap:14px; padding:4px 16px 18px; }
+  .cfg-kpis { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:16px; }
+  .cfg-grid { display:grid; grid-template-columns:minmax(320px, 5fr) 7fr; gap:16px; align-items:start; }
+  .cfg-left, .cfg-right { min-width:0; }
+  .cfg-left .panel-head, .cfg-right .panel-head { padding:16px 18px 12px; }
+  .cfg-right table th { white-space:nowrap; }
+  .cfg-right td { vertical-align:middle; }
+  .cfg-pessoa { display:flex; align-items:center; gap:10px; min-width:0; }
+  .cfg-pessoa .av { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#4F46E5,#4338CA);
+    color:#fff; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto; letter-spacing:.3px; }
+  .cfg-pessoa .nm { font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cfg-ind { font-size:9.5px; font-weight:700; color:var(--amb); margin-left:2px; white-space:nowrap; }
+  .cfg-hr { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .cfg-right .ico { background:transparent; border:none; color:var(--faint); cursor:pointer; font-size:13px;
+    padding:5px 6px; border-radius:6px; line-height:1; transition:all .14s; }
+  .cfg-right .ico:hover { color:var(--accent); background:var(--primary-bg); }
+  @media (max-width:980px) {
+    .cfg-kpis { grid-template-columns:repeat(2, 1fr); }
+    .cfg-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width:600px) { .cfg-kpis { grid-template-columns:1fr; } }
+  .grupo-card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:18px 18px 16px; display:flex; flex-direction:column; }
+  .grupo-head { display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; user-select:none; }
+  .chevron { color:var(--faint); font-size:13px; width:22px; text-align:center; transition:transform .15s; flex:0 0 auto; }
+  .grupo-titulo { display:flex; align-items:center; gap:9px; flex-wrap:wrap; min-width:0; }
+  .grupo-nome { font-size:15px; font-weight:700; letter-spacing:-.2px; }
+  .badge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px;
+    background:var(--ok-bg); color:var(--ok); white-space:nowrap; }
+  .badge.neutro { background:var(--slate-bg); color:var(--mut); }
+  .grupo-dias { display:flex; gap:4px; margin:12px 0 4px; }
+  .dia-chip { width:27px; height:27px; border-radius:8px; font-size:10.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; background:var(--slate-bg); color:var(--faint);
+    cursor:pointer; user-select:none; transition:all .15s; }
+  .dia-chip.on { background:var(--blue-bg); color:var(--accent); }
+  .dia-chip:hover { background:var(--blue-bg); color:var(--accent); }
+  .membros-list { display:flex; flex-direction:column; gap:1px; margin-top:10px; }
+  .membro-row { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:9px;
+    font-size:13px; transition:background .14s; }
+  .membro-row:hover { background:var(--primary-bg); }
+  .membro-row .av { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#4F46E5,#4338CA);
+    color:#fff; font-size:10.5px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto; letter-spacing:.3px; }
+  .membro-row .nm { flex:1; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .membro-row .hr { font-size:12px; color:var(--mut); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .membro-row .hr i { font-style:normal; font-size:9.5px; color:var(--amb); margin-left:4px; }
+  .membro-row .ico { background:transparent; border:none; color:var(--faint); cursor:pointer; font-size:13px;
+    padding:5px 6px; border-radius:6px; line-height:1; transition:all .14s; }
+  .membro-row .ico:hover { color:var(--txt); background:var(--primary-bg); }
+  .membro-row .ico.danger:hover { color:var(--bad); background:rgba(239,68,68,.12); }
+  .add-membro { display:flex; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line-2); align-items:center; }
+  .add-membro select { flex:1; padding:8px 10px; font-size:12.5px; border-radius:8px; border:1px solid var(--line); background:var(--card-2); color:var(--txt); outline:none; }
+  .add-membro .btn { padding:8px 14px; font-size:12.5px; }
+  .campo { display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--mut); font-weight:600; }
+  .campo input { padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:var(--card-2); color:var(--txt); font-size:14px; outline:none; font-family:inherit; }
+  .campo input:focus { border-color:var(--accent); }
+  .g-pessoas { max-height:220px; overflow-y:auto; border:1px solid var(--line-2); border-radius:9px;
+    background:var(--card-2); padding:4px; display:flex; flex-direction:column; gap:1px; }
+  .g-pessoa { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:7px; cursor:pointer;
+    font-size:13px; transition:background .14s; user-select:none; }
+  .g-pessoa:hover { background:var(--primary-bg); }
+  .g-pessoa input { width:15px; height:15px; accent-color:var(--accent); cursor:pointer; flex:0 0 auto; }
+  .g-pessoa.on { background:var(--blue-bg); }
+  .g-pessoa .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* ---------- responsivo (celular) ---------- */
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+    #app { flex-direction: column; }
+    .sidebar { width: 100%; flex: 0 0 auto; height: auto; position: static;
+      flex-direction: row; align-items: center; padding: 12px 14px; gap: 4px; overflow-x: auto;
+      border-right:none; border-bottom:1px solid var(--line-2); scrollbar-width:none; }
+    .sidebar::-webkit-scrollbar { display:none; }
+    .sidebar .logo { padding: 0; margin-right: auto; flex: 0 0 auto; }
+    .sidebar .logo .name { font-size: 14px; }
+    .sidebar .logo .mark { width: 26px; height: 26px; font-size: 13px; }
+    .sidebar .nav { flex-direction: row; gap: 4px; flex-wrap: nowrap; flex: 0 0 auto; }
+    .sidebar .nav a { padding: 8px 11px; font-size: 12px; white-space: nowrap; flex: 0 0 auto; }
+    .sidebar .nav a svg { display: none; }
+    .sidebar .foot { display: none; }
+    .main { padding: 16px 14px 48px; }
+    .topbar h1 { font-size: 18px; }
+    .topbar .sub { font-size: 12px; }
+    .kpis-6, .kpis-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .filtros { padding: 12px 14px 0; }
+    .panel-head { padding: 15px 16px 0; }
+    .tbl-wrap { padding: 6px 4px 10px; }
+    th, td { padding: 10px 11px; }
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ===== KpiCard unificado: título topo, ícone subtil à direita, valor destaque, subtítulo ===== */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi-linha-rotulo { font-size: 11px; font-weight: 700; color: var(--faint);
+    text-transform: uppercase; letter-spacing: .6px; margin: 2px 0 8px; }
+  .kpi-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .kc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .kc-titulo { font-size: 12px; font-weight: 600; color: var(--mut); letter-spacing: .2px;
+    min-width: 0; overflow-wrap: anywhere; }
+  .kc-icone { width: 17px; height: 17px; flex: 0 0 auto; color: var(--faint); }
+  .kpi-v { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums;
+    letter-spacing: -.5px; line-height: 1.1; overflow-wrap: anywhere; }
+  .kpi-l { font-size: 11.5px; color: var(--faint); font-weight: 500; overflow-wrap: anywhere; }
+  .kc-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; background: var(--blue-bg); color: var(--accent);
+    margin-left: 6px; vertical-align: middle; }
+  .kpi-card.k-ok .kpi-v, .kpi-card.k-ok .kc-icone { color: var(--ok); }
+  .kpi-card.k-amb .kpi-v, .kpi-card.k-amb .kc-icone { color: var(--amb); }
+  .kpi-card.k-bad .kpi-v, .kpi-card.k-bad .kc-icone { color: var(--bad); }
+  .kpi-card.k-blue .kpi-v, .kpi-card.k-blue .kc-icone { color: var(--accent); }
+  .kpi-card.k-slate .kpi-v { color: var(--txt); }
+  .kpi-card.k-banco.neg .kpi-v, .kpi-card.k-banco.neg .kc-icone { color: var(--bad); }
+  .kpi-card.k-banco .kpi-v, .kpi-card.k-banco .kc-icone { color: var(--ok); }
+  /* linhas de KPIs: 6 colunas (tempo real, com o donut) e 4 colunas (período) em lg */
+  .kpis-6 { grid-template-columns: repeat(6, 1fr); }
+  .kpis-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 1100px) {
+    .kpis-6 { grid-template-columns: repeat(3, 1fr); }
+    .kpis-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .kpis-6, .kpis-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .colab-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; cursor: pointer; position: relative; overflow: hidden;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .18s ease; }
+  .colab-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow-lg); }
+  .colab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .colab-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent); opacity: 0; transition: opacity .2s ease; }
+  .colab-card:hover::before { opacity: 1; }
+
+  .colab-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .avatar-lg { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center;
+    justify-content: center; font-size: 17px; font-weight: 800; color: #fff; flex: 0 0 auto;
+    letter-spacing: .5px; }
+  .colab-id { min-width: 0; flex: 1; }
+  .colab-nome { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; }
+  .colab-cpf { font-size: 11.5px; color: var(--mut); margin-top: 3px; }
+
+  .colab-stats { display: flex; gap: 8px; margin-bottom: 14px; }
+  .stat { flex: 1; background: var(--card-2); border: 1px solid var(--line-2); border-radius: 10px;
+    padding: 11px 6px; text-align: center; }
+  .stat-v { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
+  .stat-v.pos { color: var(--ok); }
+  .stat-v.neg { color: var(--bad); }
+  .stat-l { font-size: 10px; color: var(--mut); margin-top: 3px; text-transform: uppercase;
+    letter-spacing: .6px; font-weight: 600; }
+
+  .colab-bar { height: 5px; background: var(--line-2); border-radius: 3px; overflow: hidden; }
+  .colab-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .7s cubic-bezier(.22,1,.36,1); }
+  .colab-bar-fill.warn { background: linear-gradient(90deg, var(--amb), #d97706); }
+  .colab-bar-fill.over { background: linear-gradient(90deg, var(--ok), #16a34a); }
+
+  /* ===== Colaboradores — gestão: header, busca, selo biometria, ações ===== */
+  .eyebrow { font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--accent); margin-bottom:4px; }
+  .colab-tools { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  .colab-tools .busca { flex:1; min-width:220px; padding:10px 12px; font-size:13px; border-radius:9px;
+    border:1px solid var(--line); background:var(--card-2); color:var(--txt); outline:none; }
+  .colab-tools .busca:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.16); }
+  .cc-acoes { position:absolute; top:10px; right:10px; display:flex; gap:4px; opacity:0; transition:opacity .15s; }
+  .colab-card:hover .cc-acoes, .colab-card:focus-within .cc-acoes { opacity:1; }
+  .cc-acoes button { width:28px; height:28px; border-radius:8px; border:1px solid var(--line); background:var(--card);
+    color:var(--mut); cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; }
+  .cc-acoes button:hover { color:var(--accent); border-color:var(--accent); }
+  .cc-acoes button.danger:hover { color:var(--bad); border-color:var(--bad); }
+  .selo-bio { position:relative; }
+  .selo-bio::after { content:''; position:absolute; right:-2px; bottom:-2px; width:12px; height:12px;
+    border-radius:50%; border:2px solid var(--card); background:var(--amb); }
+  .selo-bio.ativa::after { background:var(--ok); }
+  .vin-rows { display:flex; flex-direction:column; gap:6px; margin:12px 0; }
+  .vin-row { display:flex; justify-content:space-between; gap:10px; font-size:12px; }
+  .vin-row .rot { color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-size:10px; font-weight:700; }
+  .vin-row .val { color:var(--txt); font-weight:600; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cc-pends { display:flex; flex-wrap:wrap; gap:5px; }
+  .cc-edit { display:none; flex-direction:column; gap:8px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-2); }
+  .cc-edit.aberto { display:flex; }
+  .cc-edit select, .cc-edit input { padding:8px 10px; font-size:12.5px; border-radius:8px; border:1px solid var(--line);
+    background:var(--card-2); color:var(--txt); outline:none; width:100%; }
+
+  @media (max-width: 640px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .colab-card { padding: 14px; }
+  }
+
+  /* ===== shell: sidebar colapsável + header de filtros globais (Task 10) ===== */
+  .sidebar-toggle { position:absolute; top:22px; right:-12px; width:24px; height:24px; border-radius:50%;
+    border:1px solid var(--line); background:var(--card); color:var(--mut); cursor:pointer; font-size:11px;
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow); z-index:5; }
+  .sidebar-toggle:hover { color:var(--txt); border-color:var(--accent); }
+  .sidebar.colapsada { width:68px; flex:0 0 68px; padding:22px 8px; overflow:hidden; }
+  .sidebar.colapsada .logo .name, .sidebar.colapsada .foot { display:none; }
+  .sidebar.colapsada .nav a { font-size:0; justify-content:center; padding:10px 6px; gap:0; }
+  .sidebar.colapsada .logo { justify-content:center; padding:0 0 22px; }
+
+  .filtros-globais { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; background:var(--card);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:14px 16px; margin-bottom:18px; }
+  .filtros-globais .campo { gap:5px; }
+  .filtros-globais select, .filtros-globais input[type=date] { padding:8px 11px; font-size:12.5px;
+    border-radius:9px; border:1px solid var(--line); background:var(--card-2); color:var(--txt); outline:none; }
+  .filtros-globais select:focus, .filtros-globais input[type=date]:focus {
+    border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.16); }
+  .filtro-rotulo { font-size:11px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; }
+
+  /* kpis-painel eliminado — KPIs consolidados nas linhas kpis-6 / kpis-4 */
+
+  /* Espelho: slots pareados + badges semânticos */
+  .slots { display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-variant-numeric:tabular-nums; }
+  .slot { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:8px;
+    background:var(--card-2); border:1px solid var(--line-2); font-size:12px; font-weight:600; white-space:nowrap; }
+  .slot .rotulo { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.4px; }
+  .slots .seta { color:var(--faint); font-size:11px; }
+  /* timeline semântica: verde entrada · âmbar intervalo · índigo saída · tracejado cinza vazio */
+  .slot.t-entrada { background:var(--ok-bg); border-color:#A7F3D0; color:var(--ok); }
+  .slot.t-pausa, .slot.t-volta { background:var(--amb-bg); border-color:#FDE68A; color:var(--amb); }
+  .slot.t-termino { background:var(--blue-bg); border-color:#C7D2FE; color:var(--accent); }
+  .slot.t-entrada .rotulo, .slot.t-pausa .rotulo, .slot.t-volta .rotulo, .slot.t-termino .rotulo { color:inherit; opacity:.75; }
+  .slot.vazio { opacity:1; background:transparent; color:var(--faint); border-style:dashed; border-color:var(--line-2); }
+  .slot.vazio .rotulo { color:var(--faint); opacity:1; }
+  .badge.ok { background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok); }
+  .badge.aviso { background:var(--amb-bg); color:var(--amb); border:1px solid var(--amb); }
+  .badge.perigo { background:var(--perigo-bg, #FFF1F2); color:var(--bad); border:1px solid var(--bad); }
+  .badge.info { background:var(--blue-bg); color:var(--accent); border:1px solid var(--accent); }
+
+  /* Espelho: colapso de excedentes — 1 badge discreto, nunca dezenas de "ÓRFÃ" */
+  .pareamento-cel { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; }
+  .extras-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:999px;
+    border:1px dashed var(--line-2); background:var(--card-2); color:var(--mut); font-size:11px; font-weight:600;
+    cursor:pointer; white-space:normal; text-align:center; transition:all .15s; }
+  .extras-badge:hover { border-color:var(--accent); color:var(--accent); background:var(--blue-bg); }
+
+  /* Espelho: faixa de totais entre filtros e tabela */
+  .resumo-espelho { display:flex; flex-wrap:wrap; gap:10px; padding:12px 20px 14px; border-bottom:1px solid var(--line-2); }
+  .rs-item { flex:1 1 130px; min-width:0; background:var(--card-2); border:1px solid var(--line-2);
+    border-radius:10px; padding:9px 12px; text-align:center; }
+  .rs-item .rs-l { display:block; font-size:10px; font-weight:700; color:var(--faint);
+    text-transform:uppercase; letter-spacing:.5px; overflow-wrap:anywhere; }
+  .rs-item .rs-v { display:block; margin-top:3px; font-size:15px; font-weight:800;
+    font-variant-numeric:tabular-nums; letter-spacing:-.3px; color:var(--txt); overflow-wrap:anywhere; }
+  .rs-item .rs-v.rs-ok { color:var(--ok); }
+  .rs-item .rs-v.rs-amb { color:var(--amb); }
+  .rs-item .rs-v.rs-bad { color:var(--bad); }
+
+  /* Espelho: tabela centrada, linha controlada (~14px vertical) */
+  #view-espelho { min-width:0; }
+  #view-espelho .topbar { margin-top:0; align-items:flex-start; overflow:visible; }
+  #view-espelho .topbar .actions { margin-left:auto; flex-shrink:0; justify-content:flex-end; }
+  #view-espelho .panel { overflow:hidden; min-width:0; }
+  .tabela-espelho th, .tabela-espelho td { text-align:center; vertical-align:middle; }
+  .tabela-espelho td { padding:14px 12px; }
+  .btn-ajustar { padding:6px 11px; font-size:12px; white-space:nowrap; transition:all .16s; }
+  .btn-ajustar svg { width:13px; height:13px; flex:0 0 auto; }
+  .btn-ajustar:hover { border-color:var(--accent); color:var(--accent); background:var(--blue-bg); transform:none; }
+
+  /* Drawer de ajuste (ui-kit) — formulário + auditoria */
+  .drawer h2 { font-size:17px; font-weight:700; letter-spacing:-.2px; margin:0 0 4px; }
+  .drawer .sub { font-size:12.5px; color:var(--mut); margin-bottom:18px; }
+  .drawer .campo { margin-bottom:13px; }
+  .drawer .campo select, .drawer .campo input, .drawer .campo textarea {
+    padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:var(--card-2);
+    color:var(--txt); font-size:13.5px; outline:none; font-family:inherit; width:100%; }
+  .drawer .campo textarea { min-height:80px; resize:vertical; }
+  .drawer .campo select:focus, .drawer .campo input:focus, .drawer .campo textarea:focus {
+    border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.16); }
+  .drawer-acoes { display:flex; gap:8px; margin:18px 0 8px; }
+  .drawer-acoes .btn { flex:1; justify-content:center; }
+  .auditoria { border-top:1px solid var(--line-2); margin-top:18px; padding-top:14px; }
+  .auditoria h3 { font-size:11px; font-weight:700; color:var(--faint); text-transform:uppercase;
+    letter-spacing:.6px; margin:0 0 10px; }
+  .aud-item { font-size:12px; padding:9px 10px; border:1px solid var(--line-2); border-radius:9px;
+    margin-bottom:7px; background:var(--card-2); }
+  .aud-item .quando { color:var(--faint); font-variant-numeric:tabular-nums; }
+  .aud-item .motivo { color:var(--txt); margin-top:3px; }
+
+  /* Visão geral: barra unificada de controlos + grelha 12-col (gráfico 5 / inspetor 7) */
+  .barra-geral { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; background:var(--card);
+    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:14px 16px; margin-bottom:18px; }
+  .barra-geral .atalhos { display:flex; gap:6px; flex-wrap:wrap; }
+  .barra-geral .atalhos .btn { padding:8px 12px; font-size:12.5px; }
+  .barra-geral .atalhos .btn.ativo { border-color:var(--accent); color:var(--accent); background:var(--blue-bg); }
+  .barra-geral .campo { gap:5px; display:flex; flex-direction:column; }
+  .barra-acoes { margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+  .grid-12 { display:grid; grid-template-columns:repeat(12, 1fr); gap:16px; margin-bottom:16px; align-items:start; }
+  .grid-12 .col-5 { grid-column:span 5; min-width:0; }
+  .grid-12 .col-7 { grid-column:span 7; min-width:0; overflow:hidden; }
+  @media (max-width:900px) {
+    .grid-12 { grid-template-columns:1fr; }
+    .grid-12 .col-5, .grid-12 .col-7 { grid-column:auto; }
+    .barra-acoes { margin-left:0; width:100%; }
+  }
+
+  /* Visão geral fase 2: gráfico semanal empilhado + inspetor do dia */
+  #graficoSemana { min-height:240px; }
+  #graficoSemana svg { width:100%; height:auto; min-height:240px; display:block; }
+  #graficoSemana .barra-dia { cursor:pointer; }
+  #graficoSemana .barra-dia rect { transition:opacity .15s; }
+  #graficoSemana .barra-dia:hover rect { opacity:.82; }
+  #graficoSemana .barra-dia.selecionada rect { stroke:var(--accent); stroke-width:1.5; }
+  .legenda-tipos { display:flex; gap:14px; flex-wrap:wrap; padding:10px 20px 16px; font-size:11.5px; color:var(--mut); }
+  .legenda-tipos .leg-item { display:inline-flex; align-items:center; gap:6px; }
+  .legenda-tipos .leg-dot { width:9px; height:9px; border-radius:3px; display:inline-block; }
+  /* Inspetor do dia: nome sem truncagem precoce + pills de batidas com wrap/scroll */
+  .insp-linha { display:flex; align-items:flex-start; gap:10px; padding:10px 20px; border-top:1px solid var(--line-2); min-width:0; }
+  .insp-linha .insp-nome { flex:1; min-width:0; font-size:12.5px; font-weight:600; overflow-wrap:anywhere; }
+  .insp-linha .insp-pills { display:flex; flex-wrap:wrap; gap:6px; max-height:160px; overflow-y:auto; min-width:0; flex:2; }
+  .insp-hora { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px;
+    font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .insp-hora.t-entrada { background:var(--ok-bg); color:var(--ok); }
+  .insp-hora.t-pausa { background:var(--amb-bg); color:var(--amb); }
+  .insp-hora.t-volta { background:var(--blue-bg); color:var(--accent); }
+  .insp-hora.t-termino { background:var(--slate-bg); color:var(--mut); }
+  .insp-hora .cont { font-size:10px; opacity:.85; }
+
+  /* tabela zebra + hover */
+  tbody tr:nth-child(even) { background:#F8FAFC; }
+  tbody tr:hover { background:var(--primary-bg, #EEF2FF); }
+  td, th { font-variant-numeric:tabular-nums; }
+
+  /* responsivo: sidebar vira overlay */
+  @media (max-width: 900px) {
+    .sidebar { position:fixed; top:0; left:0; bottom:0; width:236px; height:100vh; z-index:60;
+      transform:translateX(-100%); transition:transform .22s ease-out; border-right:1px solid var(--line);
+      flex-direction:column; overflow-y:auto; }
+    .sidebar.aberta { transform:translateX(0); box-shadow:var(--shadow-lg); }
+    .sidebar.colapsada { width:236px; flex-basis:auto; }
+    .sidebar.colapsada .logo .name, .sidebar.colapsada .foot { display:revert; }
+    .sidebar.colapsada .nav a { font-size:13.5px; justify-content:flex-start; padding:10px 12px; gap:11px; }
+    .sidebar-toggle { display:none; }
+    .btn-sidebar-mobile { display:inline-flex !important; }
+  }
+  /* ===== Visual refresh (override) ===== */
+  .btn-sidebar-mobile { display:none; }
+  :root {
+    --bg:#F4F6FB; --card:#FFFFFF; --card-2:#F8FAFC;
+    --line:#E7EAF3; --line-2:#EEF1F7;
+    --txt:#0F172A; --mut:#5B6779; --faint:#9AA3B5;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 4px 14px rgba(16,24,40,.05);
+    --shadow-lg:0 20px 48px -16px rgba(16,24,40,.22);
+  }
+  body { background:linear-gradient(180deg,#F7F9FD 0%, var(--bg) 240px); }
+  .main { padding:30px 40px 90px; }
+  .sidebar { border-right:1px solid var(--line); }
+  .logo { padding-bottom:26px; }
+
+  /* Barra de filtros: atalhos em pílula segmentada + campos + ações */
+  .barra-geral { padding:16px 18px; gap:14px; border:1px solid var(--line); box-shadow:var(--shadow); }
+  .barra-geral .atalhos { border:1px solid var(--line-2); border-radius:11px; padding:4px; background:var(--card-2); }
+  .barra-geral .atalhos .btn { border:none; background:transparent; box-shadow:none; padding:7px 13px; border-radius:8px; color:var(--mut); }
+  .barra-geral .atalhos .btn:hover { color:var(--accent); transform:none; }
+  .barra-geral .atalhos .btn.ativo { background:#fff; color:var(--accent); border:1px solid var(--line); box-shadow:var(--shadow); }
+  .barra-geral .campo input, .barra-geral .campo select { padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--card); }
+  .barra-geral .filtro-rotulo { margin-bottom:2px; }
+  .barra-acoes { gap:9px; }
+  .barra-acoes .btn { padding:10px 15px; }
+
+  /* KPIs: ícone em chip colorido + respiro */
+  .kpi-linha-rotulo { margin:8px 2px 10px; font-size:11px; letter-spacing:.8px; display:flex; align-items:center; gap:10px; }
+  .kpi-linha-rotulo::after { content:''; flex:1; height:1px; background:var(--line-2); }
+  .kpi-card { padding:18px; gap:12px; border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid var(--line);
+    transition:transform .15s ease, box-shadow .18s ease; }
+  .kpi-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+  .kc-top { align-items:flex-start; }
+  .kc-icone { width:34px; height:34px; flex:0 0 34px; padding:8px; border-radius:9px; box-sizing:border-box;
+    background:var(--slate-bg); color:var(--mut); }
+  .kpi-card.k-ok .kc-icone { background:var(--ok-bg); color:var(--ok); }
+  .kpi-card.k-amb .kc-icone { background:var(--amb-bg); color:var(--amb); }
+  .kpi-card.k-blue .kc-icone { background:var(--blue-bg); color:var(--accent); }
+  .kpi-card.k-slate .kc-icone { background:var(--slate-bg); color:var(--mut); }
+  .kpi-card.k-banco .kc-icone { background:var(--ok-bg); color:var(--ok); }
+  .kpi-card.k-banco.neg .kc-icone { background:#FFF1F2; color:var(--bad); }
+  .kc-titulo { font-size:12.5px; }
+  .kpi-v { font-size:28px; letter-spacing:-.8px; }
+  .kpi-l { font-size:12px; }
+
+  /* Painéis e grelha */
+  .panel { border-radius:var(--radius); border:1px solid var(--line); box-shadow:var(--shadow); overflow:hidden; }
+  .panel-head { padding:20px 22px 0; }
+  .panel-head h2 { font-size:15px; }
+  .grid-12, .grid { gap:16px; margin-bottom:16px; }
+
+  /* Tabela: cabeçalho sutil */
+  th { background:var(--card-2); }
+  .tbl-wrap { padding:8px 12px 14px; }
+  /* ===== Reorganização da visão geral: KPI -> gráfico+status -> tabela ===== */
+  #view-geral .tbl-wrap { padding:4px 12px 12px; }
+  #view-geral th { padding:10px 12px; }
+  #view-geral td { padding:11px 12px; }
+  /* ===== KPIs enxutos: UMA linha de 6 caixas (kpis-6, com o donut) ===== */
+  .kpi-l .menor { font-size:10.5px; color:var(--faint); }
+  /* ===== Cards de colaborador: avatar em destaque + informações ===== */
+  .cc-acoes { position:static; opacity:1; display:flex; gap:4px; justify-content:flex-end; margin-bottom:10px; }
+  .colab-card:hover .cc-acoes, .colab-card:focus-within .cc-acoes { opacity:1; }
+  .colab-card { padding:20px 18px 16px; }
+  .colab-head-v2 { display:flex; justify-content:center; margin-bottom:12px; }
+  .avatar-xl { width:84px; height:84px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    position:relative;
+    font-size:28px; font-weight:800; color:#fff; letter-spacing:.5px;
+    box-shadow:0 10px 24px -8px rgba(79,70,229,.45); }
+  .avatar-xl .avatar-foto { position:absolute; inset:0; width:100%; height:100%;
+    border-radius:50%; object-fit:cover; }
+  .colab-id-v2 { text-align:center; margin-bottom:12px; }
+  .colab-id-v2 .colab-nome { font-size:16px; font-weight:700; overflow-wrap:anywhere; }
+  .colab-id-v2 .colab-cpf { font-size:12px; color:var(--mut); margin-top:3px; }
+  .colab-infos { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; padding:12px;
+    background:var(--card-2); border:1px solid var(--line-2); border-radius:12px; }
+  .info-row { display:flex; justify-content:space-between; gap:10px; font-size:12.5px; }
+  .info-row .rot { color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-size:10px; font-weight:700; white-space:nowrap; }
+  .info-row .val { color:var(--txt); font-weight:600; text-align:right; overflow-wrap:anywhere; }
+
+
+</style>
+</head>
+<body id="body">
+
+<!-- ===== LOGIN ===== -->
+<div id="login" class="login-body">
+  <div class="login-card">
+    <div class="mark">⏱</div>
+    <h1>Ponto Digital</h1>
+    <p>Painel administrativo · acesso restrito</p>
+    <input type="text" id="usuario" placeholder="Usuário" autocomplete="username">
+    <input type="password" id="senha" placeholder="Senha de acesso" autocomplete="current-password">
+    <button id="btnLogin">Entrar</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="display:none; flex:1; width:100%;">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" id="btnSidebarToggle" title="Recolher menu" aria-label="Recolher menu">«</button>
+    <div class="logo"><span class="mark">⏱</span><span class="name">Ponto Digital</span></div>
+    <nav class="nav">
+      <a class="active" data-view="geral">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>Visão geral</a>
+      <a data-view="colaboradores">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg>Colaboradores</a>
+      <a data-view="espelho">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg>Espelho</a>
+      <a data-view="vinculos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Vínculos</a>
+      <a data-view="historico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Histórico</a>
+      <a data-view="config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configuração</a>
+      <a id="btnLogout" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Sair</a>
+    </nav>
+    <div class="foot">Brandão Corrêa · RH</div>
+  </aside>
+
+  <main class="main">
+    <button class="btn btn-sidebar-mobile" id="btnSidebarMobile" aria-label="Abrir menu" style="padding:8px 12px; margin-bottom:12px">☰</button>
+
+    <!-- ===== ABA: VISÃO GERAL ===== -->
+    <section id="view-geral">
+      <div class="topbar">
+        <div><h1>Visão geral</h1><div class="sub">Jornada e presença da equipe · <span id="dataLabel"></span></div></div>
+      </div>
+
+      <!-- ===== BARRA ÚNICA DE CONTROLOS: atalhos de data + filtros + ações ===== -->
+      <div class="barra-geral" id="filtrosGlobais">
+        <div class="atalhos" role="group" aria-label="Atalhos de período">
+          <button class="btn" id="btnRapidoHoje">Hoje</button>
+          <button class="btn" id="btnRapido7">7 dias</button>
+          <button class="btn" id="btnRapido30">30 dias</button>
+          <button class="btn" id="btnRapidoCustom">Personalizado</button>
+        </div>
+        <div class="campo"><span class="filtro-rotulo">Período de</span>
+          <input type="date" id="fxDe"></div>
+        <div class="campo"><span class="filtro-rotulo">Até</span>
+          <input type="date" id="fxAte"></div>
+        <div class="campo"><span class="filtro-rotulo">Grupo / Departamento</span>
+          <select id="fxGrupo"><option value="">Todos os grupos</option></select></div>
+        <div class="campo"><span class="filtro-rotulo">Status do ponto</span>
+          <select id="fxStatus">
+            <option value="">Todos</option>
+            <option value="presente">Presente</option>
+            <option value="em pausa">Em pausa</option>
+            <option value="encerrado">Encerrado</option>
+            <option value="ausente">Ausente</option>
+          </select></div>
+        <input type="date" id="data" hidden>
+        <div class="barra-acoes">
+          <a class="btn" id="btnAbrirTotem" href="/index.html" target="_blank" rel="noopener"
+             title="Abrir o totem de batida facial em nova aba">▶ Abrir Totem de Ponto</a>
+          <button class="btn primary" id="btnExport">↧ Exportar CSV</button>
+          <button class="btn" id="btnCopiarLink">🔗 Copiar link de cadastro</button>
+        </div>
+      </div>
+
+      <!-- ===== KPIs consolidados: UMA linha de 5 caixas ===== -->
+      <div class="kpi-linha-rotulo">Operação em Tempo Real</div>
+      <div class="kpis kpis-6" id="kpisTempoReal">
+        <div class="kpi-card k-ok">
+          <div class="kc-top"><span class="kc-titulo">Presentes agora</span><svg class="kc-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/></svg></div>
+          <div class="kpi-v" id="cPresentes">0</div>
+          <div class="kpi-l" id="sPresentes">Em pausa <span id="cPausa">0</span> · Encerraram <span id="cEncerrados">0</span></div>
+        </div>
+        <div class="kpi-card k-amb">
+          <div class="kc-top"><span class="kc-titulo">Batidas ímpares pendentes</span><svg class="kc-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+          <div class="kpi-v" id="cImpares">0</div>
+          <div class="kpi-l" id="sImpares">sem par no espelho</div>
+        </div>
+        <div class="kpi-card k-slate" id="cardAssiduidade">
+          <div class="kc-top"><span class="kc-titulo">Total de batidas</span><svg class="kc-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg></div>
+          <div class="kpi-v" id="cTotalBatidas">0</div>
+          <div class="kpi-l"><span id="sMediaDiaria">média diária —</span> · Assiduidade <span id="cAssiduidade">—</span> <span class="menor" id="sAssiduidade">sem dados no período</span></div>
+        </div>
+        <div class="kpi-card k-slate">
+          <div class="kc-top"><span class="kc-titulo">Horas trabalhadas hoje</span><svg class="kc-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <div class="kpi-v"><span id="cHorasHoje">0h</span><span class="kc-badge" id="cExtrasBadge" hidden></span></div>
+          <div class="kpi-l" id="sHorasHoje">trabalho da equipe</div>
+        </div>
+        <div class="kpi-card k-banco" id="cardBanco">
+          <div class="kc-top"><span class="kc-titulo">Banco de horas</span><svg class="kc-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M7 7h5a2 2 0 0 1 0 4H8a2 2 0 0 0 0 4h5"/></svg></div>
+          <div class="kpi-v" id="cBanco">0h</div>
+          <div class="kpi-l"><span id="sBanco">saldo da equipe</span> · Sem biometria <span id="cSemBio">0</span> <span class="menor" id="sSemBio">colaboradores pendentes</span></div>
+        </div>
+        <!-- quadrado do donut: status da equipe hoje, junto às demais caixas da linha -->
+        <div class="donut-mini" title="Status da equipe hoje">
+          <div class="donut"><svg width="76" height="76" viewBox="0 0 130 130" id="donutSvg"></svg><div class="center"><div class="n" id="donutN">0</div><div class="l">pessoas</div></div></div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </div>
+      <!-- wrapper vazio mantido para as referências JS -->
+      <div class="kpis kpis-4" id="kpisPeriodo" hidden></div>
+
+      <!-- ===== SECÇÃO CENTRAL: gráfico (5 col) + inspetor do dia (7 col) ===== -->
+      <div class="grid-12">
+        <div class="panel col-5" style="margin-bottom:0">
+          <div class="panel-head"><h2>Batidas por dia da semana</h2><span class="muted" id="lblGraficoPeriodo"></span></div>
+          <div id="graficoSemana"></div>
+          <div class="legenda-tipos" id="legendaTipos"></div>
+        </div>
+        <div class="panel col-7" style="margin-bottom:0">
+          <div class="panel-head"><h2>Inspetor do dia</h2><span class="muted" id="lblInspetorDia">clique numa barra</span></div>
+          <div id="inspetorDia"><div class="vazio">selecione uma barra para ver as batidas do dia</div></div>
+        </div>
+      </div>
+
+      <!-- ===== STATUS DA EQUIPE (donut) — vive no .topbar como .donut-mini ===== -->
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><h2>Jornada da equipe</h2><span class="muted" id="lblJornada"></span></div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Colaborador</th><th>Status</th><th>Entrada</th><th>Pausa</th><th>Volta</th><th>Término</th><th>Trabalhado</th><th>Almoço</th></tr></thead><tbody id="tabUsuarios"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ABA: COLABORADORES ===== -->
+    <section id="view-colaboradores" hidden>
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">CADASTRO &amp; BIOMETRIA FACIAL</div>
+          <h1>Gestão de Colaboradores</h1>
+          <div class="sub">Cadastro, biometria facial e vínculos de integração por pessoa</div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btnLinkAutoCadastro">🔗 Link de Auto-Cadastro</button>
+          <button class="btn primary" id="btnNovoColaborador">+ Novo Colaborador</button>
+        </div>
+      </div>
+      <div class="colab-tools">
+        <input type="search" class="busca" id="buscaColab" placeholder="Buscar por nome ou CPF…" aria-label="Buscar colaborador por nome ou CPF">
+      </div>
+      <div class="kpis" id="kpisColab"></div>
+      <div class="cards-grid" id="gridColab"></div>
+    </section>
+
+    <!-- ===== ABA: HISTÓRICO ===== -->
+    <section id="view-historico" hidden>
+      <div class="topbar">
+        <div><h1>Histórico</h1><div class="sub">Todas as batidas registradas</div></div>
+      </div>
+      <div class="panel">
+        <div class="filtros">
+          <select id="fColab"><option value="">Todos os colaboradores</option></select>
+          <input type="date" id="fDe">
+          <input type="date" id="fAte">
+          <button class="btn primary" id="btnFiltrar">Filtrar</button>
+          <button class="btn" id="btnLimpar">Limpar</button>
+        </div>
+        <div class="tbl-wrap">
+          <table><thead><tr><th>Data / hora</th><th>Colaborador</th><th>Tipo</th><th>Local</th></tr></thead><tbody id="tabHist"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ABA: CONFIGURAÇÃO ===== -->
+    <section id="view-config" hidden>
+      <div class="topbar">
+        <div><h1>Configuração</h1><div class="sub">Grupos/setores, horários e escala de trabalho</div></div>
+        <div class="actions"><button class="btn primary" onclick="novoGrupo()">+ Novo grupo</button></div>
+      </div>
+      <div class="cfg-kpis" id="cfgKpis"></div>
+      <div class="cfg-grid">
+        <div class="panel cfg-left">
+          <div class="panel-head"><h2>Grupos & escalas</h2><span class="muted">horário padrão do setor</span></div>
+          <div id="grupos"></div>
+        </div>
+        <div class="panel cfg-right">
+          <div class="panel-head"><h2>Horários por pessoa</h2><span class="muted">individual sobrepõe o grupo</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Colaborador</th><th>Grupo</th><th>Entrada</th><th>Saída</th><th>Almoço</th><th></th></tr></thead>
+              <tbody id="cfgPessoas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ABA: ESPELHO DE PONTO (Task 10) ===== -->
+    <section id="view-espelho" hidden>
+      <div class="topbar">
+        <div><h1>Espelho</h1><div class="sub">Pareamento Entrada / Intervalo / Saída, extras e ajustes auditáveis</div></div>
+        <div class="actions">
+          <button class="btn" id="btnExportAfd">↧ AFD</button>
+          <button class="btn" id="btnExportAej">↧ AEJ</button>
+          <button class="btn primary" id="btnEspelhoPdf">⎙ Espelho de Ponto (PDF)</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="filtros esp-filtros">
+          <label class="campo"><span class="filtro-rotulo">Colaborador</span>
+            <select id="espColab"><option value="">Selecione o colaborador</option></select></label>
+          <label class="campo"><span class="filtro-rotulo">Data Inicial</span>
+            <input type="date" id="espDe"></label>
+          <label class="campo"><span class="filtro-rotulo">Data Final</span>
+            <input type="date" id="espAte"></label>
+          <div class="atalhos" role="group" aria-label="Períodos rápidos">
+            <button type="button" class="btn" id="btnEspMes">Este mês</button>
+            <button type="button" class="btn" id="btnEspMesAnt">Mês anterior</button>
+            <button type="button" class="btn" id="btnEsp7">Últimos 7 dias</button>
+          </div>
+          <button class="btn primary" id="btnEspelho">Carregar</button>
+        </div>
+        <div class="resumo-espelho" id="resumoEspelho" hidden>
+          <div class="rs-item"><span class="rs-l">Dias Trabalhados</span><span class="rs-v" id="rsDias">—</span></div>
+          <div class="rs-item"><span class="rs-l">Total Horas Normais</span><span class="rs-v" id="rsNormais">—</span></div>
+          <div class="rs-item"><span class="rs-l">Total Extra 50%</span><span class="rs-v rs-ok" id="rsExtra50">—</span></div>
+          <div class="rs-item"><span class="rs-l">Total Extra 100%</span><span class="rs-v rs-ok" id="rsExtra100">—</span></div>
+          <div class="rs-item"><span class="rs-l">Total Noturno</span><span class="rs-v rs-amb" id="rsNoturno">—</span></div>
+          <div class="rs-item"><span class="rs-l">Pendências de Ajuste</span><span class="rs-v rs-bad" id="rsPendencias">—</span></div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tabela-espelho">
+            <thead><tr>
+              <th>Data</th><th>Pareamento</th><th>Status</th>
+              <th>Extra 50%</th><th>Extra 100%</th><th>Noturno</th><th>Almoço</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="tabEspelho"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ABA: VÍNCULOS (Task 10) ===== -->
+    <section id="view-vinculos" hidden>
+      <div class="topbar">
+        <div><h1>Vínculos de integração</h1><div class="sub">Bitrix, biometria facial e grupo/escala — corrija sem terminal</div></div>
+      </div>
+      <div class="panel">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Nome</th><th>Bitrix ID</th><th>Biometria</th><th>Grupo</th><th>Pendências</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="tabVinculos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DRAWER: AJUSTAR / VINCULAR PONTO (Task 10) ===== -->
+    <aside class="drawer" id="drawerAjuste" aria-label="Ajustar ponto">
+      <h2 id="ajTitulo">Ajustar / Vincular Ponto</h2>
+      <div class="sub" id="ajSub"></div>
+      <label class="campo">Ação
+        <select id="ajAcao">
+          <option value="inclusao">Inclusão de batida</option>
+          <option value="reclassificacao">Reclassificação</option>
+          <option value="abono_falta">Abono de falta</option>
+        </select>
+      </label>
+      <label class="campo">Tipo
+        <select id="ajTipo">
+          <option value="entrada">Entrada</option>
+          <option value="pausa">Início Intervalo</option>
+          <option value="volta">Fim Intervalo</option>
+          <option value="termino">Saída</option>
+        </select>
+      </label>
+      <label class="campo">Data e hora
+        <input type="datetime-local" id="ajQuando">
+      </label>
+      <label class="campo">Ponto de origem (reclassificação)
+        <input type="number" id="ajPontoId" placeholder="id da batida original">
+      </label>
+      <label class="campo">Justificativa (obrigatória)
+        <textarea id="ajMotivo" placeholder="por que este ajuste?"></textarea>
+      </label>
+      <div class="drawer-acoes">
+        <button class="btn" id="btnFecharDrawer">Cancelar</button>
+        <button class="btn primary" id="btnSalvarAjuste">Registrar ajuste</button>
+      </div>
+      <div class="auditoria">
+        <h3>Histórico de ajustes</h3>
+        <div id="ajHistorico"></div>
+      </div>
+    </aside>
+
+    <!-- ===== MODAL: EXTRATO INDIVIDUAL ===== -->
+    <div class="modal-tela" id="modal" hidden>
+      <div class="modal-backdrop" onclick="fecharModal()"></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <div class="m-nome" id="mNome"></div>
+            <div class="m-dados" id="mDados"></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px">
+            <input type="month" id="mMes" class="date-pill" style="padding:8px 10px; border-radius:9px; border:1px solid var(--line); background:var(--card-2); color:var(--txt); font-size:13px; outline:none" onchange="abrirExtrato(extratoAtual)">
+            <button class="btn primary" style="padding:8px 12px; font-size:13px" onclick="baixarConsolidadoPdf()">⎙ PDF</button>
+            <button class="btn" style="padding:8px 12px; font-size:13px" onclick="imprimirExtrato()">🖨️ Imprimir</button>
+            <button class="modal-close" onclick="fecharModal()">✕</button>
+          </div>
+        </div>
+        <div class="m-kpis" id="mKpis"></div>
+        <div class="m-tabela">
+          <table><thead><tr><th>Data</th><th>Entrada</th><th>Pausa</th><th>Volta</th><th>Término</th><th>Almoço</th><th>Trabalhado</th><th>Extra</th><th>Déficit</th></tr></thead><tbody id="mDias"></tbody></table>
+        </div>
+        <div class="m-faltas" id="mFaltas" style="padding:0 22px 20px; display:none"></div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: NOVO GRUPO ===== -->
+    <div class="modal-tela" id="modalGrupo" hidden>
+      <div class="modal-backdrop" onclick="fecharGrupo()"></div>
+      <div class="modal-card" style="max-width:480px">
+        <div class="modal-head">
+          <div><div class="m-nome" id="modalGrupoTitulo">Novo grupo</div><div class="m-dados">setor, horário e escala de trabalho</div></div>
+          <button class="modal-close" onclick="fecharGrupo()">✕</button>
+        </div>
+        <div style="padding:20px 22px 22px; display:flex; flex-direction:column; gap:16px">
+          <label class="campo">Nome do setor
+            <input type="text" id="gNome" placeholder="ex.: Recepção">
+          </label>
+          <div style="display:flex; gap:12px">
+            <label class="campo" style="flex:1">Entrada
+              <input type="time" id="gEntrada" value="09:00">
+            </label>
+            <label class="campo" style="flex:1">Saída
+              <input type="time" id="gSaida" value="18:00">
+            </label>
+          </div>
+          <label class="campo">Intervalo/almoço (minutos)
+            <input type="number" id="gAlmoco" value="60" min="0" max="240" step="5" placeholder="ex.: 90">
+          </label>
+          <div>
+            <div class="m-dados" style="margin-bottom:8px">Dias de trabalho</div>
+            <div class="grupo-dias" id="gDias" style="margin:0"></div>
+          </div>
+          <div>
+            <div class="m-dados" style="margin-bottom:8px">Participantes <span id="gContagem" style="color:var(--faint); font-weight:600"></span></div>
+            <input type="text" id="gBusca" placeholder="Buscar pessoa…" oninput="renderPessoas()" style="width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--card-2); color:var(--txt); font-size:13px; outline:none; margin-bottom:8px">
+            <div class="g-pessoas" id="gPessoas"></div>
+            <div style="display:flex; gap:8px; margin-top:8px">
+              <button type="button" class="btn" style="flex:1; justify-content:center; padding:8px" onclick="selecionarTodas()">Selecionar todas</button>
+              <button type="button" class="btn" style="flex:1; justify-content:center; padding:8px" onclick="limparPessoas()">Limpar</button>
+            </div>
+          </div>
+          <button class="btn primary" id="modalGrupoBotao" style="width:100%; justify-content:center" onclick="salvarGrupo()">Criar grupo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: HISTÓRICO DE AJUSTES DO COLABORADOR ===== -->
+    <div class="modal-tela" id="modalHistAjustes" hidden>
+      <div class="modal-backdrop" onclick="fecharHistAjustes()"></div>
+      <div class="modal-card" style="max-width:520px">
+        <div class="modal-head">
+          <div><div class="m-nome" id="histAjustesNome"></div><div class="m-dados">quem ajustou, quando e por quê</div></div>
+          <button class="modal-close" onclick="fecharHistAjustes()">✕</button>
+        </div>
+        <div id="histAjustesLista" style="padding:16px 22px 22px; max-height:50vh; overflow:auto"></div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: BATIDAS IGNORADAS/ÓRFÃS DO DIA (auditoria) ===== -->
+    <div class="modal-tela" id="modalExcedentes" hidden>
+      <div class="modal-backdrop" onclick="fecharExcedentes()"></div>
+      <div class="modal-card" style="max-width:560px">
+        <div class="modal-head">
+          <div><div class="m-nome" id="excTitulo"></div><div class="m-dados">batidas fora da timeline principal — lista completa para auditoria</div></div>
+          <button class="modal-close" onclick="fecharExcedentes()">✕</button>
+        </div>
+        <div id="excLista" style="padding:16px 22px 22px; max-height:50vh; overflow:auto"></div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: EDITAR HORÁRIO DO MEMBRO ===== -->
+    <div class="modal-tela" id="modalMembro" hidden>
+      <div class="modal-backdrop" onclick="fecharMembro()"></div>
+      <div class="modal-card" style="max-width:420px">
+        <div class="modal-head">
+          <div><div class="m-nome" id="mMembroNome"></div><div class="m-dados">horário individual (vazio = herda o do grupo)</div></div>
+          <button class="modal-close" onclick="fecharMembro()">✕</button>
+        </div>
+        <div style="padding:20px 22px 22px; display:flex; flex-direction:column; gap:14px">
+          <div style="display:flex; gap:12px">
+            <label class="campo" style="flex:1">Entrada
+              <input type="time" id="mMembroEntrada">
+            </label>
+            <label class="campo" style="flex:1">Saída
+              <input type="time" id="mMembroSaida">
+            </label>
+          </div>
+          <label class="campo">Intervalo/almoço (minutos, vazio = herda do grupo)
+            <input type="number" id="mMembroAlmoco" min="0" max="240" step="5" placeholder="herda do grupo">
+          </label>
+          <div style="display:flex; gap:8px">
+            <button class="btn" style="flex:1; justify-content:center" onclick="limparHorarioMembro()">Usar horário do grupo</button>
+            <button class="btn primary" style="flex:1; justify-content:center" onclick="salvarMembro()">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/ui-kit.js"></script>
+<script>
+let token = localStorage.getItem('ponto_token') || '';
+let colaboradoresCache = [];
+let extratoAtual = null;
+let extratoDados = null;
+let empresa = { razao_social: '', id: '', modelo: 'Ponto Digital' };
+const $ = id => document.getElementById(id);
+
+/* ---------- helpers ---------- */
+function fmt(seg) { if (!seg) return '—';
+  const h = Math.floor(seg/3600), m = Math.floor((seg%3600)/60);
+  return (h<10?'0':'')+h+':'+(m<10?'0':'')+m; }
+function fmtH(seg) {
+  if (!seg) return '0h';
+  const h = seg / 3600;
+  const v = Math.round(h * 10) / 10;
+  return (Number.isInteger(v) ? v : v.toLocaleString('pt-BR')) + 'h';
+}
+function hm(q) { return q ? q.slice(11,16) : '—'; }
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function avatarCor(nome) {
+  const cores = ['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777','#4f46e5'];
+  let h = 0; for (const c of nome) h = (h*31 + c.charCodeAt(0)) >>> 0;
+  return cores[h % cores.length];
+}
+function av(nome) {
+  return '<div class="avatar" style="background:'+avatarCor(nome)+'">'+(nome[0]||'?').toUpperCase()+'</div>';
+}
+function iniciais(nome) {
+  const p = (nome || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  if (p.length === 1) return p[0][0].toUpperCase();
+  return (p[0][0] + p[p.length - 1][0]).toUpperCase();
+}
+function badge(estado) {
+  const m = { presente:['Presente','presente'], 'em pausa':['Em pausa','em-pausa'],
+    encerrado:['Encerrado','encerrado'], ausente:['Ausente','ausente'] };
+  const [lbl, cls] = m[estado] || ['—','ausente'];
+  return '<span class="badge '+cls+'"><i></i>'+lbl+'</span>';
+}
+function locLink(lat, lng) {
+  if (lat == null || lng == null) return '<span style="color:#94A3B8">—</span>';
+  return '<a class="loc" target="_blank" href="https://www.openstreetmap.org/?mlat='+lat+'&mlon='+lng+'#map=17/'+lat+'/'+lng+'">📍 ver</a>';
+}
+function tipoCell(t, nome) {
+  return '<span class="tipo tipo-'+t+'"><i></i>'+nome+'</span>';
+}
+
+/* ---------- navegação SPA ---------- */
+function trocarAba(view) {
+  ['geral','colaboradores','historico','config','espelho','vinculos'].forEach(v => {
+    $('view-'+v).hidden = (v !== view);
+  });
+  document.querySelectorAll('.nav a[data-view]').forEach(a => a.classList.toggle('active', a.dataset.view === view));
+  if (view === 'geral') carregarGeral();
+  else if (view === 'colaboradores') carregarColaboradores();
+  else if (view === 'historico') carregarHistorico();
+  else if (view === 'config') carregarConfig();
+  else if (view === 'espelho') carregarEspelho();
+  else if (view === 'vinculos') carregarVinculos();
+}
+document.querySelectorAll('.nav a[data-view]').forEach(a => a.addEventListener('click', () => trocarAba(a.dataset.view)));
+
+function abaInicial() {
+  const v = (location.hash || '').replace('#', '');
+  return ['geral','colaboradores','historico','config','espelho','vinculos'].includes(v) ? v : 'geral';
+}
+
+/* ---------- ABA: VISÃO GERAL ---------- */
+async function carregarGeral() {
+  carregarFiltrosGlobais();
+  carregarKpisPainel();
+  const data = $('data').value || new Date().toISOString().slice(0,10);
+  const [m, p, r, cfg, vin] = await Promise.all([
+    fetch('/api/metricas?data='+data, {headers: authHeaders()}).then(x => x.json()),
+    fetch('/api/pontos?de='+data+'&ate='+data+'&limite=500', {headers: authHeaders()}).then(x => x.json()),
+    fetch('/api/resumo', {headers: authHeaders()}).then(x => x.json()),
+    fetch('/api/configuracao', {headers: authHeaders()}).then(x => x.json()).catch(() => ({})),
+    fetch('/api/vinculos', {headers: authHeaders()}).then(x => x.json()).catch(() => ({})),
+  ]);
+  const us = m.usuarios || [];
+  const resumo = r.resumo || [];
+  $('dataLabel').textContent = data;
+
+  // ---- presença ----
+  $('cPresentes').textContent = us.filter(u => u.estado === 'presente').length;
+  $('cPausa').textContent = us.filter(u => u.estado === 'em pausa').length;
+  $('cEncerrados').textContent = us.filter(u => u.estado === 'encerrado').length;
+
+  // ---- métricas de tempo (agregadas): valor principal nunca negativo; saldo pendente real ----
+  // turno aberto (entrada sem término): pendente = jornada do dia − trabalhado
+  const jornadaPor = {};
+  resumo.forEach(r => { jornadaPor[r.nome] = r.jornada_seg; });
+  let horasHoje = 0, pendenteSeg = 0;
+  us.forEach(u => {
+    const t = u.trabalho_seg || 0;
+    horasHoje += t;
+    if (u.entrada && !u.termino) pendenteSeg += Math.max(0, (jornadaPor[u.nome] || 8 * 3600) - t);
+  });
+  const bancoTotal = resumo.reduce((a, r) => a + (r.banco_seg || 0), 0);
+
+  $('cHorasHoje').textContent = fmtH(Math.max(0, horasHoje));
+  $('sHorasHoje').textContent = pendenteSeg > 0
+    ? 'trabalho da equipe · saldo pendente ' + fmtH(pendenteSeg)
+    : 'trabalho da equipe';
+  $('cBanco').textContent = (bancoTotal >= 0 ? '+' : '−') + fmtH(Math.abs(bancoTotal));
+  $('cardBanco').className = 'kpi-card k-banco' + (bancoTotal < 0 ? ' neg' : '');
+  $('sBanco').textContent = bancoTotal >= 0 ? 'saldo positivo' : 'déficit da equipe';
+
+  // ---- donut (status) ----
+  // folga: sem batida e o dia fora da escala do grupo (cruza /api/configuracao com /api/vinculos)
+  const diasPorGrupo = {};
+  (cfg.grupos || []).forEach(g => { diasPorGrupo[g.nome] = g.dias || []; });
+  const grupoDe = {};
+  (vin.vinculos || []).forEach(v => { if (v.grupo) grupoDe[v.nome] = v.grupo; });
+  const dowEscala = (new Date(data + 'T12:00:00').getDay() + 6) % 7;   // escala em weekday Python: 0=seg … 6=dom
+  const deFolga = nome => {
+    const g = grupoDe[nome]; if (!g) return false;
+    const dias = diasPorGrupo[g]; if (!dias || !dias.length) return false;
+    return !dias.includes(dowEscala);
+  };
+  const st = { presente:0, 'em pausa':0, encerrado:0, ausente:0, folga:0 };
+  us.forEach(u => st[(u.estado === 'ausente' && deFolga(u.nome)) ? 'folga' : u.estado]++);
+  const cores = { presente:'#059669', 'em pausa':'#D97706', encerrado:'#4F46E5', ausente:'#CBD5E1', folga:'#94A3B8' };
+  const rotulos = { presente:'Presente', 'em pausa':'Em pausa', encerrado:'Encerrado', ausente:'Ausente', folga:'Folga' };
+  const total = us.length || 1;
+  let acc = 0, segs = '';
+  for (const k of ['presente','em pausa','encerrado','ausente','folga']) {
+    const v = st[k]; if (!v) continue;
+    const ang = v/total * 2*Math.PI, r = 52, cx = 65, cy = 65;
+    const x0 = cx + r*Math.cos(acc - Math.PI/2), y0 = cy + r*Math.sin(acc - Math.PI/2);
+    const x1 = cx + r*Math.cos(acc+ang - Math.PI/2), y1 = cy + r*Math.sin(acc+ang - Math.PI/2);
+    segs += '<path d="M'+x0+' '+y0+' A '+r+' '+r+' 0 '+(ang>Math.PI?1:0)+' 1 '+x1+' '+y1+'" fill="none" stroke="'+cores[k]+'" stroke-width="22"/>';
+    acc += ang;
+  }
+  $('donutSvg').innerHTML = segs || '<circle cx="65" cy="65" r="52" fill="none" stroke="#E2E8F0" stroke-width="22"/>';
+  $('donutN').textContent = us.length;
+  $('legend').innerHTML = ['presente','em pausa','encerrado','ausente','folga'].map(k =>
+    '<div class="row"><span class="dot" style="background:'+cores[k]+'"></span><span class="lbl">'+rotulos[k]+'</span><span class="n">'+st[k]+'</span></div>').join('');
+
+  // ---- tabela de jornada ----
+  $('lblJornada').textContent = data;
+  $('tabUsuarios').innerHTML = us.map(u =>
+    '<tr><td><div class="cell-nome">'+av(u.nome)+'<div><div class="nm">'+esc(u.nome)+'</div><div class="dt">'+u.batidas+' batidas</div></div></div></td>'+
+    '<td>'+badge(u.estado)+'</td><td class="mono">'+hm(u.entrada)+'</td><td class="mono">'+hm(u.pausa)+'</td>'+
+    '<td class="mono">'+hm(u.volta)+'</td><td class="mono">'+hm(u.termino)+'</td>'+
+    '<td><span class="t-horas">'+fmt(u.trabalho_seg)+'</span></td><td class="mono" style="color:#94a3b8">'+fmt(u.almoco_seg)+'</td></tr>'
+  ).join('') || '<tr><td colspan="8"><div class="vazio">sem registros nesta data</div></td></tr>';
+
+  carregarPeriodo();
+}
+
+/* ---------- Visão geral fase 2: KPIs do período + gráfico semanal + inspetor ---------- */
+const TIPOS_DIA = [
+  { tipo: 'entrada', rot: 'Entrada', cor: '#059669' },
+  { tipo: 'pausa', rot: 'Início Intervalo', cor: '#D97706' },
+  { tipo: 'volta', rot: 'Fim Intervalo', cor: '#0891B2' },
+  { tipo: 'termino', rot: 'Saída', cor: '#E11D48' },
+];
+const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+let _pontosPeriodo = [];
+let _inspetorData = null;
+
+function periodoGrafico() {
+  const f = periodoFiltros();
+  const ate = f.ate || $('data').value || new Date().toISOString().slice(0, 10);
+  // sem filtro de início: últimos 7 dias até a data de referência
+  let de = f.de;
+  if (!de) {
+    const d = new Date(ate + 'T12:00:00');
+    d.setDate(d.getDate() - 6);
+    de = d.toISOString().slice(0, 10);
+  }
+  return { de, ate };
+}
+
+async function carregarPeriodo() {
+  const { de, ate } = periodoGrafico();
+  const [p, vin] = await Promise.all([
+    fetch('/api/pontos?de=' + de + '&ate=' + ate + '&limite=2000', {headers: authHeaders()}).then(x => x.json()),
+    fetch('/api/vinculos', {headers: authHeaders()}).then(x => x.json()).catch(() => ({vinculos: []})),
+  ]);
+  const pontos = p.pontos || [];
+  _pontosPeriodo = pontos;
+
+  // batidas por data
+  const porData = {};
+  pontos.forEach(b => {
+    const d = b.quando.slice(0, 10);
+    (porData[d] = porData[d] || []).push(b);
+  });
+  const datas = Object.keys(porData).sort();
+  const totalBatidas = pontos.length;
+  const maior = datas.reduce((a, d) => (porData[d].length > (porData[a] || []).length ? d : a), datas[0] || '');
+
+  // assiduidade: % de colaboradores com batida no último dia com movimento (último dia útil coberto)
+  const ref = datas[datas.length - 1] || ate;
+  let assiduidade = null;
+  if (totalBatidas) {
+    const met = await fetch('/api/metricas?data=' + ref, {headers: authHeaders()}).then(x => x.json()).catch(() => ({usuarios: []}));
+    const presentesRef = (met.usuarios || []).filter(u => (u.batidas || 0) > 0).length;
+    const totalColabs = (met.total) || (vin.vinculos || []).length || (met.usuarios || []).length || 1;
+    assiduidade = Math.round(presentesRef / totalColabs * 100);
+  }
+
+  const diasPeriodo = Math.max(1, Math.round((new Date(ate + 'T12:00:00') - new Date(de + 'T12:00:00')) / 86400000) + 1);
+  $('cTotalBatidas').textContent = totalBatidas;
+  $('sMediaDiaria').textContent = 'média diária ' + (totalBatidas / diasPeriodo).toFixed(1) + (maior ? ' · pico ' + maior.slice(8, 10) + '/' + maior.slice(5, 7) + ' (' + porData[maior].length + ')' : '');
+  $('cAssiduidade').textContent = assiduidade === null ? '—' : assiduidade + '%';
+  $('sAssiduidade').textContent = assiduidade === null ? 'sem dados no período'
+    : 'em ' + ref.slice(8, 10) + '/' + ref.slice(5, 7);
+  // sem nenhuma batida no período o card volta ao neutro (k-slate), sem cor de alerta
+  $('cardAssiduidade').className = 'kpi-card ' +
+    (assiduidade === null ? 'k-slate' : (assiduidade >= 80 ? 'k-ok' : 'k-amb'));
+
+  renderGraficoSemana(porData, de, ate);
+  // corte de volume do /api/pontos (limite=2000): avisa em vez de silenciar
+  $('lblGraficoPeriodo').textContent = de + ' a ' + ate +
+    (pontos.length >= 2000 ? ' · período truncado, refine o filtro' : '');
+  if (_inspetorData && porData[_inspetorData]) abrirInspetorDia(_inspetorData);
+  else if (datas.length) abrirInspetorDia(datas[datas.length - 1]);
+}
+
+function renderGraficoSemana(porData, de, ate) {
+  $('lblGraficoPeriodo').textContent = de + ' a ' + ate;
+  const datas = Object.keys(porData).sort();
+  if (!datas.length) {
+    $('graficoSemana').innerHTML = '<div class="vazio">sem batidas no período</div>';
+    $('legendaTipos').innerHTML = '';
+    return;
+  }
+  const W = 720, H = 220, padB = 34, padT = 12, padL = 8;
+  const slot = (W - padL * 2) / datas.length;
+  const barW = Math.min(34, Math.max(8, slot - 6));
+  const usable = H - padB - padT;
+  const maxTotal = Math.max(4, ...datas.map(d => porData[d].length));
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Batidas por dia, empilhadas por tipo">';
+  svg += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padL) + '" y2="' + (H - padB) + '" stroke="#E2E8F0" stroke-width="1"/>';
+  datas.forEach((d, i) => {
+    const bx = padL + i * slot + (slot - barW) / 2;
+    const cont = {};
+    TIPOS_DIA.forEach(t => cont[t.tipo] = 0);
+    porData[d].forEach(b => { if (cont[b.tipo] !== undefined) cont[b.tipo]++; });
+    let y = H - padB;
+    svg += '<g class="barra-dia' + (d === _inspetorData ? ' selecionada' : '') + '" onclick="abrirInspetorDia(\'' + d + '\')" ' +
+      'role="button" tabindex="0" onkeydown="if(event.key===\'Enter\')abrirInspetorDia(\'' + d + '\')" ' +
+      'aria-label="Dia ' + d + ', ' + porData[d].length + ' batidas">';
+    TIPOS_DIA.forEach(t => {
+      const v = cont[t.tipo];
+      if (!v) return;
+      const h = Math.max(3, Math.round(v / maxTotal * usable));
+      y -= h;
+      svg += '<rect x="' + bx.toFixed(1) + '" y="' + y + '" width="' + barW + '" height="' + h + '" fill="' + t.cor + '" rx="2"><title>' + t.rot + ': ' + v + '</title></rect>';
+    });
+    const dt = new Date(d + 'T12:00:00');
+    svg += '<text x="' + (bx + barW / 2).toFixed(1) + '" y="' + (H - padB + 14) + '" text-anchor="middle" font-size="10" fill="#64748B">' + DIAS_SEMANA[dt.getDay()] + '</text>';
+    svg += '<text x="' + (bx + barW / 2).toFixed(1) + '" y="' + (H - padB + 26) + '" text-anchor="middle" font-size="9" fill="#94A3B8">' + d.slice(8, 10) + '/' + d.slice(5, 7) + '</text>';
+    svg += '</g>';
+  });
+  svg += '</svg>';
+  $('graficoSemana').innerHTML = svg;
+  $('legendaTipos').innerHTML = TIPOS_DIA.map(t =>
+    '<span class="leg-item"><span class="leg-dot" style="background:' + t.cor + '"></span>' + t.rot + '</span>').join('');
+}
+
+function abrirInspetorDia(data) {
+  _inspetorData = data;
+  document.querySelectorAll('#graficoSemana .barra-dia').forEach(g => g.classList.remove('selecionada'));
+  const alvo = document.querySelector('#graficoSemana .barra-dia[onclick*="' + data + '"]');
+  if (alvo) alvo.classList.add('selecionada');
+  $('lblInspetorDia').textContent = data.slice(8, 10) + '/' + data.slice(5, 7) + '/' + data.slice(0, 4);
+  const doDia = _pontosPeriodo.filter(b => b.quando.slice(0, 10) === data);
+  const porPessoa = {};
+  doDia.forEach(b => { (porPessoa[b.colaborador] = porPessoa[b.colaborador] || []).push(b); });
+  const nomes = Object.keys(porPessoa).sort();
+  $('inspetorDia').innerHTML = nomes.map(n => {
+    // dedupe no frontend: mesmo tipo no mesmo minuto vira 1 pill com contador
+    const vistos = {};
+    const pills = porPessoa[n].slice().sort((a, b) => a.quando.localeCompare(b.quando))
+      .map(b => {
+        const chave = b.tipo + '@' + b.quando.slice(0, 16);
+        if (vistos[chave]) { vistos[chave].qtd++; return null; }
+        vistos[chave] = { qtd: 1, tipo: b.tipo, rot: b.tipo_nome, min: hm(b.quando) };
+        return vistos[chave];
+      })
+      .filter(Boolean)
+      .map(p => '<span class="insp-hora t-' + esc(p.tipo) + '">' + esc(p.rot) + ' ' + p.min +
+        (p.qtd > 1 ? ' <span class="cont">(x' + p.qtd + ')</span>' : '') + '</span>').join('');
+    return '<div class="insp-linha">' + av(n) +
+      '<div style="min-width:0; flex:1">' +
+        '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">' +
+          '<span class="insp-nome">' + esc(n) + '</span>' +
+          '<a class="loc" href="#" onclick="irParaEspelho(\'' + escJS(n) + '\', \'' + data + '\'); return false">Espelho →</a>' +
+        '</div>' +
+        '<div class="insp-pills">' + pills + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<div class="vazio">sem batidas neste dia</div>';
+}
+
+function irParaEspelho(nome, data) {
+  _espelhoFoco = nome;
+  $('espDe').value = data;
+  $('espAte').value = data;
+  trocarAba('espelho');
+}
+
+/* ---------- ABA: COLABORADORES ---------- */
+const JORNADA = 8 * 3600;
+let _vinculosCache = [];
+let _gruposCfgCache = [];
+
+function pendBadge(p) {
+  const mapa = {
+    sem_biometria: ['Sem biometria', 'aviso'],
+    sem_grupo: ['Sem grupo', 'aviso'],
+    sem_cpf: ['Sem CPF', 'perigo'],
+    sem_bitrix: ['Sem Bitrix', 'perigo'],
+  };
+  const [lbl, cls] = mapa[p] || [p, 'aviso'];
+  return '<span class="badge ' + cls + '">' + lbl + '</span>';
+}
+
+function filtrarCardsColab() {
+  const q = ($('buscaColab').value || '').toLowerCase().trim();
+  document.querySelectorAll('#gridColab .colab-card').forEach(c => {
+    c.style.display = (!q || (c.dataset.busca || '').includes(q)) ? '' : 'none';
+  });
+}
+
+async function carregarFotosColab() {
+  document.querySelectorAll('#gridColab .avatar-foto[data-foto]').forEach(async img => {
+    try {
+      const r = await fetch('/api/colaborador/' + encodeURIComponent(img.dataset.foto) + '/foto',
+                            {headers: authHeaders()});
+      if (!r.ok) return;
+      img.src = URL.createObjectURL(await r.blob());
+    } catch (e) {}
+  });
+}
+
+function copiarLinkAutoCadastro() {
+  const link = window.location.origin + '/cadastro-publico.html';
+  navigator.clipboard.writeText(link).then(() => {
+    toast('link de auto-cadastro copiado', 'ok');
+  }).catch(() => { prompt('Copie o link:', link); });
+}
+
+async function abrirHistAjustes(nome) {
+  $('histAjustesNome').textContent = 'Ajustes de ' + nome;
+  $('histAjustesLista').innerHTML = '<div class="vazio">carregando…</div>';
+  $('modalHistAjustes').hidden = false;
+  const a = await fetch('/api/pontos/ajustes?colaborador=' + encodeURIComponent(nome),
+    {headers: authHeaders()}).then(r => r.json()).catch(() => ({ajustes: []}));
+  $('histAjustesLista').innerHTML = (a.ajustes || []).map(x =>
+    '<div class="aud-item"><div class="quando">' + esc(x.criado_em) + ' · ' + esc(x.usuario || 'rh') + ' · ' + esc(x.acao) +
+    (x.tipo_novo ? ' · ' + esc(x.tipo_novo) : '') + '</div>' +
+    '<div class="motivo">' + esc(x.motivo) + '</div></div>').join('') ||
+    '<div class="vazio">nenhum ajuste registrado</div>';
+}
+
+function fecharHistAjustes() { $('modalHistAjustes').hidden = true; }
+
+function abrirEdicaoVinculos(nome) {
+  const box = document.getElementById('ed-' + nome);
+  if (box) box.classList.toggle('aberto');
+}
+
+async function salvarVinculosCard(nome) {
+  const box = document.getElementById('ed-' + nome);
+  if (!box) return;
+  const grupoEl = box.querySelector('.vin-grupo'), bitrixEl = box.querySelector('.vin-bitrix');
+  // grupo_id null explícito = remover vínculo; bitrix_id sempre atualiza o campo
+  const body = {
+    grupo_id: grupoEl.value === '' ? null : parseInt(grupoEl.value, 10),
+    bitrix_id: bitrixEl.value.trim(),
+  };
+  const r = await fetch('/api/colaborador/' + encodeURIComponent(nome) + '/vinculos', {
+    method: 'PUT',
+    headers: Object.assign({'Content-Type': 'application/json'}, authHeaders()),
+    body: JSON.stringify(body),
+  }).catch(() => null);
+  if (!r || !r.ok) { toast('não foi possível salvar o vínculo', 'erro'); return; }
+  toast('vínculo atualizado', 'ok');
+  carregarColaboradores();
+  carregarKpisPainel();
+}
+
+async function excluirColaborador(nome) {
+  const ok = await confirmarAcao({ titulo: 'Excluir colaborador',
+    texto: 'Excluir ' + nome + '? Os vínculos e a biometria serão removidos; as batidas originais permanecem no histórico.',
+    confirmar: 'Excluir' });
+  if (!ok) return;
+  const r = await fetch('/api/colaborador/' + encodeURIComponent(nome), {
+    method: 'DELETE', headers: authHeaders(),
+  }).catch(() => null);
+  if (!r || !r.ok) { toast('não foi possível excluir', 'erro'); return; }
+  toast('colaborador excluído', 'ok');
+  carregarColaboradores();
+  carregarKpisPainel();
+}
+
+async function carregarColaboradores() {
+  const [vin, res, met, cfg] = await Promise.all([
+    fetch('/api/vinculos', {headers: authHeaders()}).then(r => r.json()),
+    fetch('/api/resumo', {headers: authHeaders()}).then(r => r.json()),
+    fetch('/api/metricas', {headers: authHeaders()}).then(r => r.json()),
+    fetch('/api/configuracao', {headers: authHeaders()}).then(r => r.json()).catch(() => ({})),
+  ]);
+  const lista = vin.vinculos || [];
+  _vinculosCache = lista;
+  _gruposCfgCache = cfg.grupos || [];
+  const resumo = {};
+  (res.resumo || []).forEach(r => resumo[r.nome] = r);
+  const hoje = {};
+  (met.usuarios || []).forEach(u => hoje[u.nome] = u.estado);
+
+  const unicos = lista.map(v => v.nome);
+
+  // KPIs do topo
+  const presentes = unicos.filter(n => ['presente', 'em pausa'].includes(hoje[n])).length;
+  const ausentes = unicos.filter(n => !hoje[n] || hoje[n] === 'ausente').length;
+  const bancoTotal = unicos.reduce((acc, n) => {
+    const r = resumo[n] || { dias: 0, total_seg: 0 };
+    return acc + (r.banco_seg !== undefined ? r.banco_seg : (r.total_seg - JORNADA * r.dias));
+  }, 0);
+  $('kpisColab').innerHTML =
+    kpiCard(unicos.length, 'colaboradores', 'k-blue') +
+    kpiCard(presentes, 'presentes hoje', 'k-ok') +
+    kpiCard(ausentes, 'ausentes hoje', 'k-amb') +
+    kpiCard((bancoTotal >= 0 ? '+' : '−') + fmt(Math.abs(bancoTotal)),
+            'banco de horas', bancoTotal >= 0 ? 'k-ok' : 'k-bad');
+
+  // cards
+  $('gridColab').innerHTML = lista.map(v => {
+    const nome = v.nome;
+    const safe = escJS(nome);
+    const bioAtiva = v.biometria === 'ativa';
+    const escala = (v.grupo_id != null)
+      ? ((_gruposCfgCache.find(g => g.id === v.grupo_id) || {}).entrada
+          ? ' · ' + (_gruposCfgCache.find(g => g.id === v.grupo_id).entrada) + '–' + (_gruposCfgCache.find(g => g.id === v.grupo_id).saida)
+          : '')
+      : '';
+    const pends = (v.pendencias || []).length
+      ? (v.pendencias || []).map(pendBadge).join('')
+      : '<span class="badge ok">Em dia</span>';
+    const opcoes = '<option value="">sem grupo</option>' +
+      _gruposCfgCache.map(g => '<option value="' + g.id + '"' + (g.id === v.grupo_id ? ' selected' : '') + '>' + esc(g.nome) + '</option>').join('');
+    return '<div class="colab-card" data-busca="' + esc((nome + ' ' + (v.cpf || '')).toLowerCase()) + '">' +
+      '<div class="cc-acoes">' +
+        '<button title="Ver histórico de ajustes" aria-label="Ver histórico de ajustes" onclick="event.stopPropagation(); abrirHistAjustes(\'' + safe + '\')">🕘</button>' +
+        '<button title="Capturar biometria" aria-label="Capturar biometria" onclick="event.stopPropagation(); window.open(\'/cadastro.html\', \'_blank\', \'noopener\')">📷</button>' +
+        '<button title="Editar vínculos" aria-label="Editar vínculos" onclick="event.stopPropagation(); abrirEdicaoVinculos(\'' + safe + '\')">✎</button>' +
+        '<button title="Ver extrato" aria-label="Ver extrato" onclick="event.stopPropagation(); abrirExtrato(\'' + safe + '\')">📄</button>' +
+        '<button class="danger" title="Excluir" aria-label="Excluir" onclick="event.stopPropagation(); excluirColaborador(\'' + safe + '\')">🗑</button>' +
+      '</div>' +
+      '<div class="colab-head-v2">' +
+        '<div class="avatar-xl selo-bio ' + (bioAtiva ? 'ativa' : '') + '" style="background:' + avatarCor(nome) + '" ' +
+          'title="Biometria ' + (bioAtiva ? 'ativa' : 'pendente') + '">' +
+          '<span class="avatar-ini">' + iniciais(nome) + '</span>' +
+          (v.tem_foto ? '<img class="avatar-foto" data-foto="' + esc(nome) + '" alt="" aria-hidden="true">' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="colab-id-v2">' +
+        '<div class="colab-nome">' + esc(nome) + '</div>' +
+        '<div class="colab-cpf">' + (v.cpf ? esc(v.cpf) : '—') + '</div>' +
+      '</div>' +
+      '<div class="colab-infos">' +
+        '<div class="info-row"><span class="rot">Biometria</span><span class="val">' + (bioAtiva ? 'Ativa' : 'Pendente') + '</span></div>' +
+        '<div class="info-row"><span class="rot">Telefone</span><span class="val">' + (v.telefone ? esc(v.telefone) : '—') + '</span></div>' +
+        '<div class="info-row"><span class="rot">Grupo / Escala</span><span class="val">' + (v.grupo ? esc(v.grupo) + esc(escala) : '—') + '</span></div>' +
+        '<div class="info-row"><span class="rot">Bitrix ID</span><span class="val">' + (v.bitrix_id ? esc(v.bitrix_id) : '—') + '</span></div>' +
+      '</div>' +
+      '<div class="cc-pends">' + pends + '</div>' +
+      '<div class="cc-edit" id="ed-' + esc(nome) + '">' +
+        '<select class="vin-grupo" aria-label="Grupo / escala">' + opcoes + '</select>' +
+        '<input type="text" class="vin-bitrix" value="' + esc(v.bitrix_id || '') + '" placeholder="ID Bitrix" aria-label="Bitrix ID">' +
+        '<button class="btn primary" style="padding:8px 12px; font-size:12px" onclick="salvarVinculosCard(\'' + safe + '\')">Salvar vínculos</button>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<div class="vazio">nenhum colaborador cadastrado</div>';
+  filtrarCardsColab();
+  carregarFotosColab();
+}
+
+function kpi(v, l, cls) {
+  return '<div class="m-kpi"><div class="v '+(cls||'')+'">'+v+'</div><div class="l">'+l+'</div></div>';
+}
+/* KpiCard reutilizável: título topo, ícone subtil à direita, valor destaque, subtítulo.
+   kpiCard(valor, titulo, cls, opts) — opts: {sub, icone, valId, subId} */
+function kpiCard(v, l, cls, opts) {
+  opts = opts || {};
+  const icone = opts.icone || '';
+  return '<div class="kpi-card '+(cls||'')+'">' +
+    '<div class="kc-top"><span class="kc-titulo">'+esc(l)+'</span>' +
+      (icone ? '<svg class="kc-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'+icone+'</svg>' : '') +
+    '</div>' +
+    '<div class="kpi-v"' + (opts.valId ? ' id="'+opts.valId+'"' : '') + '>' + v + '</div>' +
+    '<div class="kpi-l"' + (opts.subId ? ' id="'+opts.subId+'"' : '') + '>' + (opts.sub || '') + '</div>' +
+  '</div>';
+}
+
+async function abrirExtrato(nome) {
+  extratoAtual = nome;
+  if (!$('mMes').value) {
+    $('mMes').value = new Date().toISOString().slice(0,7);
+  }
+  const mes = $('mMes').value;
+  const r = await fetch('/api/relatorio/'+encodeURIComponent(nome)+(mes?'?mes='+mes:''), { headers: {'Authorization': 'Bearer ' + token} });
+  const d = await r.json();
+  extratoDados = d;
+  $('mNome').textContent = d.nome;
+  $('mDados').textContent = 'CPF '+(d.cpf||'—')+' · '+(d.telefone||'sem telefone')+' · '+(d.grupo?('grupo: '+d.grupo):'sem grupo')+' · '+(mes||'todos os meses');
+  const t = d.totais || {};
+  $('mKpis').innerHTML =
+    kpi(t.dias, 'dias') +
+    kpi(fmt(t.trabalhado_seg), 'trabalhado') +
+    kpi(fmt(t.extra_seg), 'horas extra', 'pos') +
+    kpi(fmt(t.deficit_seg), 'déficit', 'neg') +
+    kpi((t.banco_seg>=0?'+':'−')+fmt(Math.abs(t.banco_seg)), 'banco de horas', t.banco_seg>=0?'pos':'neg') +
+    kpi(d.total_faltas || 0, 'faltas', (d.total_faltas>0)?'neg':'pos');
+  // faltas explícitas
+  const faltas = d.faltas || [];
+  const mf = $('mFaltas');
+  if (faltas.length) {
+    mf.style.display = 'block';
+    mf.innerHTML = '<div style="background:var(--perigo-bg);border:1px solid rgba(225,29,72,.35);border-radius:10px;padding:12px 14px;font-size:13px;color:#B91C1C;font-weight:600">'+
+      '⚠️ ' + faltas.length + ' falta(s): ' + faltas.map(f => f.slice(8,10)+'/'+f.slice(5,7)).join(', ')+'</div>';
+  } else {
+    mf.style.display = 'none';
+  }
+  $('mDias').innerHTML = (d.dias || []).map(x =>
+    '<tr><td class="mono">'+x.data+'</td>'+
+    '<td class="mono">'+hm(x.entrada)+'</td>'+
+    '<td class="mono">'+hm(x.pausa)+'</td>'+
+    '<td class="mono">'+hm(x.volta)+'</td>'+
+    '<td class="mono">'+hm(x.termino)+'</td>'+
+    '<td class="mono" style="color:#94a3b8">'+fmt(x.almoco_seg)+'</td>'+
+    '<td class="mono" style="font-weight:600">'+fmt(x.trabalhado_seg)+'</td>'+
+    '<td class="mono" style="color:var(--ok)">'+fmt(x.extra_seg)+'</td>'+
+    '<td class="mono" style="color:var(--bad)">'+fmt(x.deficit_seg)+'</td></tr>'
+  ).join('') || '<tr><td colspan="9"><div class="vazio">sem batidas neste mês</div></td></tr>';
+  $('modal').hidden = false;
+}
+
+function formatCNPJ(c) {
+  const d = String(c || '').replace(/\D/g, '');
+  if (d.length !== 14) return c || '—';
+  return d.slice(0,2)+'.'+d.slice(2,5)+'.'+d.slice(5,8)+'/'+d.slice(8,12)+'-'+d.slice(12);
+}
+
+async function _consolidadoHtml() {
+  if (!extratoDados) return;
+  const mes = $('mMes').value || new Date().toISOString().slice(0,7);
+  const r = await fetch('/api/relatorio/'+encodeURIComponent(extratoAtual)+'/consolidado?mes='+mes, { headers: {'Authorization': 'Bearer ' + token} });
+  if (r.status === 401) { toast('sessão expirada — entre novamente', 'erro'); return; }
+  const d = await r.json().catch(() => ({ detail: 'falha ao carregar o relatório consolidado' }));
+  if (d.detail) { toast(d.detail, 'erro'); return; }
+  return { html: consolidadoRelatorioHtml(d), mes };
+}
+
+async function imprimirExtrato() {
+  const c = await _consolidadoHtml();
+  if (!c) return;
+  const w = window.open('', '_blank');
+  if (!w) { toast('permita pop-ups para imprimir o comprovante', 'aviso'); return; }
+  w.document.write(c.html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 350);
+}
+
+async function baixarConsolidadoPdf() {
+  const c = await _consolidadoHtml();
+  if (!c) return;
+  const p = await fetch('/api/gerar-pdf', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token}, body: JSON.stringify({ html: c.html }) });
+  if (!p.ok) {
+    const e = await p.json().catch(() => ({ detail: 'falha ao gerar PDF' }));
+    toast(e.detail || 'falha ao gerar PDF', 'erro');
+    return;
+  }
+  const blob = await p.blob();
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = 'relatorio-consolidado' + (c.mes ? '-' + c.mes : '') + '.pdf';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+function consolidadoRelatorioHtml(d) {
+  const emp = d.empresa || empresa;
+  const modelo = esc(emp.modelo || 'Ponto Digital');
+  const cnpj = emp.id ? formatCNPJ(emp.id) : '—';
+  const nome = esc(d.nome || '');
+  const cpf = esc(d.cpf || '—');
+  const matricula = esc(d.matricula || '—');
+  const cargo = esc(d.cargo || '—');
+  const depto = esc(d.departamento || '—');
+  const competencia = esc(d.competencia || '—');
+  const escala = esc(d.escala || '—');
+  const carga = esc(d.carga_diaria || '—');
+  const emissao = esc(d.emissao || '');
+  const aut = esc(d.autenticidade || '');
+  const razao = esc(emp.razao_social || emp.modelo || 'Ponto Digital');
+  const q = d.quadro || {};
+  const dm = d.demonstrativo || {};
+  const ex = d.extrato || [];
+  const faltas = (dm.faltas || []).map(esc).join(', ');
+  const linhas = ex.map(x => {
+    const sit = esc(x.situacao || '');
+    const falta = /falta/i.test(x.situacao || '');
+    return '<tr>' +
+      '<td class="mono">'+esc(x.dia)+'</td>' +
+      '<td class="mono">'+esc(x.sem)+'</td>' +
+      '<td class="mono">'+esc(x.entrada)+'</td>' +
+      '<td class="mono">'+esc(x.intervalo)+'</td>' +
+      '<td class="mono">'+esc(x.retorno)+'</td>' +
+      '<td class="mono">'+esc(x.saida)+'</td>' +
+      '<td class="mono" style="font-weight:600">'+esc(x.total)+'</td>' +
+      '<td class="mono">'+esc(x.he50)+'</td>' +
+      '<td class="mono">'+esc(x.he100)+'</td>' +
+      '<td class="mono">'+esc(x.debito)+'</td>' +
+      '<td class="mono">'+esc(x.noturno)+'</td>' +
+      '<td'+(falta?' style="font-weight:700;color:#b91c1c"':'')+'>'+sit+'</td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="12" style="text-align:center;color:#64748b">sem registros no período</td></tr>';
+
+  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">' +
+    '<title>Relatório Consolidado de Jornada & Ponto — '+nome+'</title><style>' +
+    '@page{size:210mm 297mm;margin:0}' +
+    '*{margin:0;padding:0;box-sizing:border-box}' +
+    'html,body{width:210mm;background:#fff}' +
+    'body{font-family:Helvetica,Arial,sans-serif;color:#111;font-size:11px}' +
+    '.page{width:210mm;height:296mm;padding:10mm 11mm 8mm;page-break-after:always;overflow:hidden;display:flex;flex-direction:column}' +
+    '.brand{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#333;text-align:center;border-bottom:1.6px solid #111;padding-bottom:5px;margin-bottom:9px}' +
+    'h1{font-size:19px;font-weight:800;text-align:center;margin:0 0 2px;letter-spacing:.2px}' +
+    '.sub{font-size:10.5px;color:#444;text-align:center;margin-bottom:9px}' +
+    '.meta{display:flex;justify-content:space-between;font-size:9.5px;color:#333;border-bottom:1px solid #999;padding-bottom:4px;margin-bottom:9px}' +
+    '.box{border:1px solid #111;padding:8px 10px;margin-bottom:9px}' +
+    '.box h2{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;border-bottom:1px solid #ccc;padding-bottom:3px}' +
+    '.box .row{font-size:10.5px;margin-bottom:2.5px}' +
+    '.grid{display:flex;flex-wrap:wrap;gap:6px}' +
+    '.cell{flex:1 1 48%;border:1px solid #999;padding:7px 9px 7px 24px;position:relative;min-height:58px}' +
+    '.cell .num{position:absolute;left:6px;top:6px;width:14px;height:14px;border:1px solid #111;border-radius:50%;font-size:8.5px;font-weight:800;text-align:center;line-height:12px}' +
+    '.cell .ttl{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.2px;margin-bottom:3px}' +
+    '.cell .big{font-size:18px;font-weight:800;margin-bottom:3px}' +
+    '.cell .ln{font-size:9.5px;color:#222;margin-bottom:1.5px}' +
+    'ul.bullets{list-style:none;padding:0;margin:0}' +
+    'ul.bullets li{font-size:10px;margin-bottom:2.5px}' +
+    '.resumo{font-size:10.5px;font-weight:700;border:1px solid #111;padding:6px 10px;margin-bottom:7px;background:#f5f5f5}' +
+    '.folha{font-size:10px;margin-bottom:7px}' +
+    '.legal ol{padding-left:16px;font-size:9.5px;color:#222}' +
+    '.legal li{margin-bottom:4px;text-align:justify}' +
+    '.ciencia{font-size:9.5px;color:#222;font-style:italic;margin-top:10px;border-top:1px solid #999;padding-top:5px;text-align:justify}' +
+    '.ass{display:flex;justify-content:space-between;gap:28px;margin-top:auto;padding-top:26px}' +
+    '.ass div{flex:1;text-align:center;font-size:10.5px;color:#222}' +
+    '.ass .lin{border-top:1px solid #111;padding-top:5px;margin-top:48px;font-weight:700}' +
+    '.ass .sub{font-size:8.5px;color:#555;font-weight:400;margin-top:2px}' +
+    '.foot{margin-top:14px;font-size:8.5px;color:#555;text-align:center;border-top:1px solid #999;padding-top:5px}' +
+    '.foot .leg{font-size:8px;color:#888}' +
+    '.tbl{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}' +
+    '.tbl th,.tbl td{border:1px solid #999;padding:8px 5px;text-align:center}' +
+    '.tbl th{background:#eee;font-size:8.5px;text-transform:uppercase;letter-spacing:.2px;color:#222}' +
+    '.tbl thead{display:table-header-group}' +
+    '.mono{font-family:"SF Mono",Menlo,Consolas,monospace}' +
+    '</style></head><body><div class="page">' +
+    '<div class="brand">'+modelo.toUpperCase()+' REP-P • PORTARIA 671/2021 MTE</div>' +
+    '<h1>RELATÓRIO CONSOLIDADO DE JORNADA &amp; PONTO</h1>' +
+    '<div class="sub">Resumo Gerencial Mensal: Horas Trabalhadas, Horas Extras, Faltas e Banco de Horas</div>' +
+    '<div class="meta"><span>Emissão: '+emissao+'</span><span>Autenticidade: '+aut+'</span></div>' +
+    '<div class="box"><h2>Dados Contratuais do Colaborador</h2>' +
+    '<div class="row" style="font-weight:700;text-transform:uppercase">Colaborador: '+nome+'</div>' +
+    '<div class="row">CPF: '+cpf+'   |   Matrícula: '+matricula+'</div>' +
+    '<div class="row">Cargo: '+cargo+'   |   Departamento: '+depto+'</div>' +
+    '<div class="row">Competência: '+competencia+'</div>' +
+    '<div class="row">Escala / Turno: '+escala+'</div>' +
+    '<div class="row">Carga Diária Prevista: '+carga+'</div></div>' +
+    '<div class="box"><h2>Quadro Consolidado de Apuração do Mês Atual</h2><div class="grid">' +
+    '<div class="cell"><div class="num">1</div><div class="ttl">Horas Trabalhadas Efetivas</div><div class="big">'+esc(q.trabalhado)+'</div>' +
+    '<div class="ln">Horas Previstas na Escala: '+esc(q.previstas)+'</div>' +
+    '<div class="ln">Dias Trabalhados: '+esc(q.dias_trabalhados)+' de '+esc(q.dias_uteis)+' dias úteis ('+esc(q.assiduidade)+'% da meta)</div></div>' +
+    '<div class="cell"><div class="num">2</div><div class="ttl">Horas Extras &amp; Noturno (Créditos)</div><div class="big">'+esc(q.creditos)+'</div>' +
+    '<div class="ln">Extras 50% (Dias Úteis): '+esc(q.extra50)+'   |   100% (DSR): '+esc(q.extra100)+'</div>' +
+    '<div class="ln">Adicional Noturno (Art. 73 CLT): '+esc(q.adicional_noturno)+' apurados</div></div>' +
+    '<div class="cell"><div class="num">3</div><div class="ttl">Faltas e Débitos de Horas</div><div class="big">'+esc(q.deficit)+'</div>' +
+    '<div class="ln">Faltas Integrais (Sem Registro): '+esc(q.faltas_integrais)+' dia(s) útil(eis)</div>' +
+    '<div class="ln">Dias com Atraso / Saída: '+esc(q.dias_debito)+' dia(s)   |   Assiduidade: '+esc(q.assiduidade)+'%</div></div>' +
+    '<div class="cell"><div class="num">4</div><div class="ttl">Banco de Horas &amp; Saldo Líquido</div><div class="big">'+esc(q.banco)+'</div>' +
+    '<div class="ln">Créditos: '+esc(q.creditos)+'   |   Débitos: '+esc(q.debitos)+'</div>' +
+    '<div class="ln">Situação: '+esc(q.situacao)+'</div></div>' +
+    '</div></div>' +
+    '<div class="box"><h2>Demonstrativo de Faltas, Ausências e Ocorrências do Mês</h2><ul class="bullets">' +
+    '<li><b>Faltas Integrais no Mês (Ausência sem Registro):</b></li>' +
+    '<li style="padding-left:14px">'+(dm.faltas||[]).length+' ocorrência(s): '+faltas+'</li>' +
+    '<li><b>Horas Extras Computadas (Art. 59 CLT):</b></li>' +
+    '<li style="padding-left:14px">'+esc(dm.extras_dias)+' dia(s) com horas extras: '+esc(dm.extras_txt)+'</li>' +
+    '<li><b>Atrasos e Saídas Antecipadas Apurados:</b></li>' +
+    '<li style="padding-left:14px">'+esc(dm.debito_dias)+' dia(s) com débito acumulado totalizando '+esc(dm.debito_total)+'.</li>' +
+    '<li><b>Dias de Repouso Semanal Remunerado (DSR):</b></li>' +
+    '<li style="padding-left:14px">'+esc(dm.dsr_dias)+' dia(s) de descanso / folga conforme escala de trabalho pactuada.</li>' +
+    '</ul></div>' +
+    '<div class="resumo">RESUMO SINTÉTICO: Previsto: '+esc(q.previstas)+'  |  Trabalhado: '+esc(q.trabalhado)+'  |  Extras: '+esc(q.creditos)+'  |  Faltas/Débitos: '+esc(q.deficit)+'  |  Saldo: '+esc(q.banco)+'</div>' +
+    '<div class="folha">Apuração de Folha de Pagamento: Folha do mês de '+competencia+' apta para fechamento contábil.</div>' +
+    '<div class="box legal"><h2>Base Legal e Conformidade Trabalhista (Portaria 671/2021 MTE &amp; CLT)</h2><ol>' +
+    '<li>Tolerâncias de Marcação (Art. 58, § 1º CLT): Variações não excedentes a 5 min em cada registro, observado o limite diário de 10 min.</li>' +
+    '<li>Limite de Horas Suplementares (Art. 59 CLT): A duração diária do trabalho não pode ser acrescida de horas suplementares em número superior a 2.</li>' +
+    '<li>Intervalo Intrajornada (Art. 71 CLT): Garantido intervalo obrigatório para repouso e alimentação conforme carga horária contratual.</li>' +
+    '<li>Regime REP-P (Portaria 671/2021 MTE): Registros autenticados com assinatura eletrônica e sincronização com o Horário de Brasília (NTP.br).</li>' +
+    '<li>Banco de Horas (Art. 59, § 2º e § 5º CLT): Compensação de créditos e débitos apurados nos termos do acordo individual/coletivo.</li>' +
+    '</ol></div>' +
+    '<div class="ciencia">Reconheço que as informações de horas trabalhadas, horas suplementares e faltas/débitos consolidadas neste relatório espelham com exatidão a apuração de minha jornada de trabalho do período indicado, nada tendo a reclamar ou opor quanto aos registros efetuados.</div>' +
+    '<div class="ass">' +
+    '<div><div class="lin">'+nome+'</div><div class="sub">Colaborador(a) - CPF: '+cpf+'<br>Matrícula: '+matricula+'</div></div>' +
+    '<div><div class="lin">'+razao+'</div><div class="sub">Departamento de Recursos Humanos (CNPJ: '+cnpj+')<br>Responsável pela Homologação do Espelho REP-P</div></div>' +
+    '</div>' +
+    '<div class="foot">'+modelo+' REP-P • Relatório Consolidado • Página 1 de 2 • Hash de Auditoria: '+aut+'<br>' +
+    '<span class="leg">Documento gerado eletronicamente em conformidade com o Art. 83 da Portaria 671/2021 MTE</span></div>' +
+    '</div><div class="page" style="page-break-after:auto">' +
+    '<h1>EXTRATO ANALÍTICO DIÁRIO DE APURAÇÃO (MARCAÇÕES &amp; OCORRÊNCIAS)</h1>' +
+    '<div class="meta"><span>Colaborador: '+nome+' (CPF: '+cpf+')</span><span>Período: '+competencia+'</span><span>Escala: '+escala+'</span></div>' +
+    '<table class="tbl"><thead><tr>' +
+    '<th>DIA</th><th>SEM</th><th>ENTRADA 1</th><th>INTERVALO</th><th>RETORNO</th><th>SAÍDA 2</th>' +
+    '<th>TOTAL TRAB.</th><th>H.E (50%)</th><th>H.E (100%)</th><th>DÉBITO</th><th>NOTURNO</th><th>SITUAÇÃO / OCORRÊNCIA</th>' +
+    '</tr></thead><tbody>'+linhas+'</tbody></table>' +
+    '<div class="foot">'+modelo+' REP-P • Relatório Consolidado • Página 2 de 2 • Hash de Auditoria: '+aut+'</div>' +
+    '</div>' +
+    '</body></html>';
+}
+
+function fecharModal() { $('modal').hidden = true; }
+
+/* ---------- ABA: HISTÓRICO ---------- */
+async function carregarHistorico() {
+  await carregarDropdownColaboradores();
+  buscarHistorico();
+}
+async function carregarDropdownColaboradores() {
+  const d = await fetch('/api/colaboradores', {headers: authHeaders()}).then(r => r.json());
+  colaboradoresCache = (d.colaboradores || []).map(c => c.nome);
+  const sel = $('fColab');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Todos os colaboradores</option>' +
+    colaboradoresCache.map(n => '<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
+  sel.value = atual;
+}
+async function buscarHistorico() {
+  const params = new URLSearchParams({ limite: '2000' });
+  const u = $('fColab').value, de = $('fDe').value, ate = $('fAte').value;
+  if (u) params.set('usuario', u);
+  if (de) params.set('de', de);
+  if (ate) params.set('ate', ate);
+  const p = await fetch('/api/pontos?'+params, {headers: authHeaders()}).then(r => r.json());
+  $('tabHist').innerHTML = (p.pontos || []).map(b =>
+    '<tr><td class="mono" style="color:#94a3b8">'+b.quando+'</td>'+
+    '<td><div class="cell-nome">'+av(b.colaborador)+'<span class="nm">'+esc(b.colaborador)+'</span></div></td>'+
+    '<td>'+tipoCell(b.tipo, b.tipo_nome)+'</td><td>'+locLink(b.lat, b.lng)+'</td></tr>'
+  ).join('') || '<tr><td colspan="4"><div class="vazio">nenhuma batida encontrada</div></td></tr>';
+}
+
+/* ---------- login ---------- */
+function authHeaders() {
+  return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+
+async function login() {
+  const usuario = $('usuario').value.trim();
+  const senha = $('senha').value.trim();
+  if (!usuario || !senha) { $('err').textContent = 'digite usuário e senha'; return; }
+  const r = await fetch('/api/login', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ usuario, senha }) });
+  if (!r.ok) {
+    $('err').textContent = r.status === 429 ? 'muitas tentativas — aguarde um pouco' : 'usuário ou senha incorretos';
+    return;
+  }
+  const d = await r.json();
+  token = d.token;
+  localStorage.setItem('ponto_token', d.token);
+  $('login').style.display = 'none';
+  $('body').style.background = 'var(--bg)';
+  $('app').style.display = 'flex';
+  $('data').value = new Date().toISOString().slice(0,10);
+  trocarAba(abaInicial());
+}
+
+$('btnLogin').addEventListener('click', login);
+$('senha').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+$('btnLogout').addEventListener('click', () => { localStorage.removeItem('ponto_token'); location.reload(); });
+$('data').addEventListener('change', carregarGeral);
+// btnHoje (date-pill) eliminado — atalho "Hoje" coberto por btnRapidoHoje na barra unificada
+$('btnFiltrar').addEventListener('click', buscarHistorico);
+$('btnLimpar').addEventListener('click', () => { $('fColab').value=''; $('fDe').value=''; $('fAte').value=''; buscarHistorico(); });
+$('btnExport').addEventListener('click', () => {
+  // CSV client-side a partir dos dados j\u00e1 carregados (/api/pontos do per\u00edodo filtrado)
+  const { de, ate } = periodoGrafico();
+  const fonte = _pontosPeriodo.length ? Promise.resolve({ pontos: _pontosPeriodo })
+    : fetch('/api/pontos?de='+de+'&ate='+ate+'&limite=2000', {headers: authHeaders()}).then(r => r.json());
+  fonte.then(p => {
+    const linhas = [['data_hora','colaborador','tipo','latitude','longitude']];
+    (p.pontos||[]).forEach(b => linhas.push([b.quando, b.colaborador, b.tipo, b.lat ?? '', b.lng ?? '']));
+    const csv = linhas.map(l => l.map(x => '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff'+csv], {type:'text/csv'}));
+    a.download = 'ponto_'+de+'_'+ate+'.csv'; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+});
+$('btnCopiarLink').addEventListener('click', copiarLinkAutoCadastro);
+
+/* header da aba Colaboradores: auto-cadastro, novo e busca nos cards */
+$('btnLinkAutoCadastro').addEventListener('click', copiarLinkAutoCadastro);
+$('btnNovoColaborador').addEventListener('click', () => window.open('/cadastro.html', '_blank', 'noopener'));
+$('buscaColab').addEventListener('input', filtrarCardsColab);
+
+/* auto-login: reutiliza o token salvo (não pede login a cada atualização) */
+(async function autoLogin() {
+  if (!token) return;
+  try {
+    const r = await fetch('/api/metricas', { headers: authHeaders() });
+    if (r.ok) {
+      $('login').style.display = 'none';
+      $('body').style.background = 'var(--bg)';
+      $('app').style.display = 'flex';
+      $('data').value = new Date().toISOString().slice(0,10);
+      trocarAba(abaInicial());
+    } else {
+      token = ''; localStorage.removeItem('ponto_token');
+    }
+  } catch (e) { /* offline: mantém o login visível */ }
+})();
+
+/* ---------- ABA: CONFIGURAÇÃO ---------- */
+const DIAS = [['Seg',0],['Ter',1],['Qua',2],['Qui',3],['Sex',4],['Sáb',5],['Dom',6]];
+
+async function carregarConfig() {
+  const [d, c] = await Promise.all([
+    fetch('/api/configuracao', { headers: {'Authorization': 'Bearer ' + token} }).then(r => r.json()),
+    fetch('/api/colaboradores', {headers: authHeaders()}).then(r => r.json()),
+  ]);
+  window._colabs = (c.colaboradores || []).map(x => x.nome);
+  if (d.empresa) empresa = d.empresa;
+  renderGrupos(d.grupos || []);
+}
+
+function iniciaisDe(nome) {
+  const p = String(nome || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+
+function escJS(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function renderGrupos(grupos) {
+  const el = $('grupos');
+  const colabs = (window._colabs || []).slice();
+  const porPessoa = {};
+  const emGrupo = new Set();
+  window._gruposDados = {};
+  grupos.forEach(g => { window._gruposDados[g.id] = g; });
+  grupos.forEach(g => (g.membros || []).forEach(m => {
+    emGrupo.add(m.colaborador);
+    porPessoa[m.colaborador] = {
+      gid: g.id, grupo: g.nome,
+      entrada: m.entrada || g.entrada, saida: m.saida || g.saida,
+      almoco: (m.almoco_min !== null && m.almoco_min !== undefined) ? m.almoco_min : g.almoco_min,
+      individual: !!(m.entrada || m.saida),
+      mEntrada: m.entrada || '', mSaida: m.saida || '',
+      mAlmoco: (m.almoco_min !== null && m.almoco_min !== undefined) ? m.almoco_min : '',
+    };
+  }));
+
+  const semGrupo = colabs.filter(n => !emGrupo.has(n)).length;
+  $('cfgKpis').innerHTML =
+    kpiCard(grupos.length, 'grupos / setores', 'k-blue') +
+    kpiCard(emGrupo.size, 'pessoas em grupos', 'k-ok') +
+    kpiCard(semGrupo, 'pessoas sem grupo', semGrupo ? 'k-amb' : 'k-ok');
+
+  if (!grupos.length) {
+    el.innerHTML = '<div style="background:var(--card-2);border:1px dashed var(--line-2);border-radius:12px;padding:36px 18px;text-align:center;color:var(--mut);font-size:13px">nenhum grupo ainda — clique em "+ Novo grupo"</div>';
+  } else {
+    el.innerHTML = grupos.map(g => {
+      const dias = g.dias || [];
+      const chips = DIAS.map(([nome, idx]) =>
+        '<span class="dia-chip '+(dias.includes(idx)?'on':'')+'">'+nome.slice(0,1)+'</span>').join('');
+      const membros = (g.membros || []).map(m => {
+        const entrada = m.entrada || g.entrada;
+        const saida = m.saida || g.saida;
+        const individual = !!(m.entrada || m.saida);
+        const almocoM = (m.almoco_min !== null && m.almoco_min !== undefined) ? m.almoco_min : g.almoco_min;
+        const mEnt = m.entrada || '';
+        const mSai = m.saida || '';
+        const mAlm = (m.almoco_min !== null && m.almoco_min !== undefined) ? m.almoco_min : '';
+        return '<div class="membro-row">'+
+          '<span class="av">'+iniciaisDe(m.colaborador)+'</span>'+
+          '<span class="nm">'+esc(m.colaborador)+'</span>'+
+          '<span class="hr">'+entrada+' – '+saida+(almocoM>0?' · '+almocoM+'min':'')+(individual?'<i>individual</i>':'')+'</span>'+
+          '<button class="ico" title="Editar horário" onclick="editarMembro('+g.id+', \''+escJS(m.colaborador)+'\', \''+escJS(mEnt)+'\', \''+escJS(mSai)+'\', '+mAlm+')">✎</button>'+
+          '<button class="ico danger" title="Remover" onclick="removerMembro('+g.id+', \''+escJS(m.colaborador)+'\')">✕</button>'+
+        '</div>';
+      }).join('');
+      const naoMembros = (window._colabs || []).filter(n => !(g.membros||[]).some(m => m.colaborador === n));
+      const add = '<div class="add-membro">'+
+        '<select id="sel-'+g.id+'"><option value="">Adicionar pessoa…</option>'+
+        naoMembros.map(n => '<option>'+esc(n)+'</option>').join('')+'</select>'+
+        '<button class="btn primary" onclick="adicionarMembro('+g.id+')">Adicionar</button></div>';
+      return '<div class="grupo-card">'+
+        '<div class="grupo-head" onclick="toggleGrupo('+g.id+')">'+
+          '<div class="grupo-titulo">'+
+            '<span class="grupo-nome">'+esc(g.nome)+'</span>'+
+            '<span class="badge">'+g.entrada+' – '+g.saida+(g.almoco_min>0?' · '+g.almoco_min+'min':'')+'</span>'+
+            '<span class="badge neutro">'+(g.membros||[]).length+' pessoas</span>'+
+          '</div>'+
+          '<div style="display:flex; align-items:center; gap:2px">'+
+            '<span class="chevron" id="chev-'+g.id+'">▾</span>'+
+            '<button class="ico" title="Editar grupo" onclick="event.stopPropagation(); editarGrupo('+g.id+')">✎</button>'+
+            '<button class="ico danger" title="Excluir grupo" onclick="event.stopPropagation(); excluirGrupo('+g.id+', \''+escJS(g.nome)+'\')">🗑</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="grupo-dias">'+chips+'</div>'+
+        '<div class="grupo-detalhe" id="det-'+g.id+'" hidden>'+
+          '<div class="membros-list">'+membros+'</div>'+
+          add+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  $('cfgPessoas').innerHTML = colabs.map(n => {
+    const p = porPessoa[n];
+    const cel = '<td><div class="cfg-pessoa"><span class="av">'+iniciaisDe(n)+'</span><span class="nm">'+esc(n)+'</span>'+
+      (p && p.individual ? '<span class="cfg-ind">individual</span>' : '')+'</div></td>';
+    if (!p) return '<tr>'+cel+'<td><span class="badge neutro">sem grupo</span></td><td>—</td><td>—</td><td>—</td><td></td></tr>';
+    return '<tr>'+cel+
+      '<td>'+esc(p.grupo)+'</td>'+
+      '<td class="cfg-hr">'+p.entrada+'</td>'+
+      '<td class="cfg-hr">'+p.saida+'</td>'+
+      '<td class="cfg-hr">'+(p.almoco > 0 ? p.almoco + 'min' : '—')+'</td>'+
+      '<td><button class="ico" title="Editar horário" aria-label="Editar horário" onclick="editarMembro('+p.gid+', \''+escJS(n)+'\', \''+escJS(p.mEntrada)+'\', \''+escJS(p.mSaida)+'\', '+p.mAlmoco+')">✎</button></td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="6" style="padding:22px;text-align:center;color:var(--mut)">nenhum colaborador cadastrado</td></tr>';
+}
+
+function toggleGrupo(id) {
+  const det = $('det-' + id);
+  const chev = $('chev-' + id);
+  if (!det) return;
+  const abrir = det.hidden;
+  det.hidden = !abrir;
+  if (chev) chev.textContent = abrir ? '▴' : '▾';
+}
+
+let _diasGrupo = [0, 1, 2, 3, 4];
+let _pessoasSelecionadas = new Set();
+let _grupoEditId = null;
+
+function novoGrupo() {
+  _grupoEditId = null;
+  _diasGrupo = [0, 1, 2, 3, 4];
+  _pessoasSelecionadas = new Set();
+  $('gNome').value = '';
+  $('gEntrada').value = '09:00';
+  $('gSaida').value = '18:00';
+  $('gAlmoco').value = 60;
+  $('gBusca').value = '';
+  $('modalGrupoTitulo').textContent = 'Novo grupo';
+  $('modalGrupoBotao').textContent = 'Criar grupo';
+  renderDiasGrupo();
+  renderPessoas();
+  $('modalGrupo').hidden = false;
+  setTimeout(() => $('gNome').focus(), 50);
+}
+
+function editarGrupo(id) {
+  const g = window._gruposDados && window._gruposDados[id];
+  if (!g) return;
+  _grupoEditId = id;
+  _diasGrupo = (g.dias || []).slice();
+  _pessoasSelecionadas = new Set((g.membros || []).map(m => m.colaborador));
+  $('gNome').value = g.nome;
+  $('gEntrada').value = g.entrada;
+  $('gSaida').value = g.saida;
+  $('gAlmoco').value = g.almoco_min || 0;
+  $('gBusca').value = '';
+  $('modalGrupoTitulo').textContent = 'Editar grupo';
+  $('modalGrupoBotao').textContent = 'Salvar alterações';
+  renderDiasGrupo();
+  renderPessoas();
+  $('modalGrupo').hidden = false;
+}
+
+function renderDiasGrupo() {
+  $('gDias').innerHTML = DIAS.map(([nome, idx]) =>
+    '<span class="dia-chip ' + (_diasGrupo.includes(idx) ? 'on' : '') + '" onclick="toggleDia(' + idx + ', this)">' + nome + '</span>').join('');
+}
+
+function toggleDia(idx, el) {
+  _diasGrupo = _diasGrupo.includes(idx) ? _diasGrupo.filter(d => d !== idx) : _diasGrupo.concat(idx);
+  el.classList.toggle('on');
+}
+
+function renderPessoas() {
+  const busca = ($('gBusca').value || '').toLowerCase();
+  const todos = (window._colabs || []).filter(n => !busca || n.toLowerCase().includes(busca));
+  $('gPessoas').innerHTML = todos.map(n => {
+    const on = _pessoasSelecionadas.has(n);
+    return '<label class="g-pessoa ' + (on ? 'on' : '') + '">' +
+      '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="togglePessoa(\'' + escJS(n) + '\')">' +
+      '<span class="nm">' + esc(n) + '</span></label>';
+  }).join('') || '<div style="padding:10px;text-align:center;color:var(--faint);font-size:12px">nenhuma pessoa encontrada</div>';
+  $('gContagem').textContent = _pessoasSelecionadas.size ? '(' + _pessoasSelecionadas.size + ' selecionadas)' : '';
+}
+
+function togglePessoa(nome) {
+  if (_pessoasSelecionadas.has(nome)) _pessoasSelecionadas.delete(nome);
+  else _pessoasSelecionadas.add(nome);
+  renderPessoas();
+}
+
+function selecionarTodas() {
+  (window._colabs || []).forEach(n => _pessoasSelecionadas.add(n));
+  renderPessoas();
+}
+
+function limparPessoas() {
+  _pessoasSelecionadas = new Set();
+  renderPessoas();
+}
+
+function fecharGrupo() { $('modalGrupo').hidden = true; }
+
+async function salvarGrupo() {
+  const nome = $('gNome').value.trim();
+  const entrada = $('gEntrada').value || '09:00';
+  const saida = $('gSaida').value || '18:00';
+  const almoco_min = parseInt($('gAlmoco').value) || 0;
+  if (!nome) { $('gNome').focus(); return; }
+  const corpo = JSON.stringify({ nome, entrada, saida, dias: _diasGrupo, almoco_min });
+  const heads = { 'Content-Type': 'application/json', 'Authorization': ('Bearer ' + token) };
+  if (_grupoEditId != null) {
+    const r = await fetch('/api/grupos/' + _grupoEditId, { method: 'PUT', headers: heads, body: corpo });
+    if (!r.ok) { toast('não foi possível salvar o grupo', 'erro'); return; }
+    const atuais = new Set((window._gruposDados && window._gruposDados[_grupoEditId] ? window._gruposDados[_grupoEditId].membros : []).map(m => m.colaborador));
+    for (const p of [..._pessoasSelecionadas]) {
+      if (!atuais.has(p)) await fetch('/api/grupos/' + _grupoEditId + '/membros', { method: 'POST', headers: heads, body: JSON.stringify({ colaborador: p }) });
+    }
+    for (const p of [...atuais]) {
+      if (!_pessoasSelecionadas.has(p)) await fetch('/api/grupos/' + _grupoEditId + '/membros/' + encodeURIComponent(p), { method: 'DELETE', headers: heads });
+    }
+  } else {
+    const r = await fetch('/api/grupos', { method: 'POST', headers: heads, body: corpo });
+    if (!r.ok) { toast('não foi possível criar o grupo', 'erro'); return; }
+    const g = await r.json();
+    for (const p of [..._pessoasSelecionadas]) {
+      await fetch('/api/grupos/' + g.id + '/membros', { method: 'POST', headers: heads, body: JSON.stringify({ colaborador: p }) });
+    }
+  }
+  _grupoEditId = null;
+  fecharGrupo();
+  carregarConfig();
+}
+
+async function excluirGrupo(id, nome) {
+  const ok = await confirmarAcao({ titulo: 'Excluir grupo',
+    texto: 'Excluir o grupo ' + nome + '?', confirmar: 'Excluir' });
+  if (!ok) return;
+  const r = await fetch('/api/grupos/'+id, { method:'DELETE', headers:{'Authorization':('Bearer '+token)} });
+  if (!r.ok) { toast('não foi possível excluir o grupo', 'erro'); return; }
+  carregarConfig();
+}
+
+async function adicionarMembro(id) {
+  const nome = $('sel-'+id).value;
+  if (!nome) return;
+  const r = await fetch('/api/grupos/'+id+'/membros', { method:'POST', headers:{'Content-Type':'application/json','Authorization':('Bearer '+token)},
+    body: JSON.stringify({ colaborador:nome }) });
+  if (!r.ok) { toast('não foi possível adicionar o membro', 'erro'); return; }
+  carregarConfig();
+}
+
+async function removerMembro(id, nome) {
+  const r = await fetch('/api/grupos/'+id+'/membros/'+encodeURIComponent(nome), { method:'DELETE', headers:{'Authorization':('Bearer '+token)} });
+  if (!r.ok) { toast('não foi possível remover o membro', 'erro'); return; }
+  carregarConfig();
+}
+
+let _membroEdit = null;
+
+function editarMembro(gid, nome, entrada, saida, almoco) {
+  _membroEdit = { gid, nome };
+  $('mMembroNome').textContent = nome;
+  $('mMembroEntrada').value = entrada || '';
+  $('mMembroSaida').value = saida || '';
+  $('mMembroAlmoco').value = (almoco === null || almoco === undefined) ? '' : almoco;
+  $('modalMembro').hidden = false;
+}
+
+function fecharMembro() { $('modalMembro').hidden = true; _membroEdit = null; }
+
+async function salvarMembro() {
+  if (!_membroEdit) return;
+  const entrada = $('mMembroEntrada').value;
+  const saida = $('mMembroSaida').value;
+  const almocoRaw = $('mMembroAlmoco').value;
+  const almoco_min = almocoRaw === '' ? null : (parseInt(almocoRaw) || 0);
+  const r = await fetch('/api/grupos/'+_membroEdit.gid+'/membros/'+encodeURIComponent(_membroEdit.nome), {
+    method:'PUT', headers:{'Content-Type':'application/json','Authorization':('Bearer '+token)},
+    body: JSON.stringify({ entrada, saida, almoco_min }) });
+  if (!r.ok) { toast('não foi possível salvar o membro', 'erro'); return; }
+  fecharMembro();
+  carregarConfig();
+}
+
+async function limparHorarioMembro() {
+  if (!_membroEdit) return;
+  $('mMembroEntrada').value = '';
+  $('mMembroSaida').value = '';
+  $('mMembroAlmoco').value = '';
+  await salvarMembro();
+}
+
+/* ============================ Task 10 — painel gestor ============================ */
+
+/* ---------- sidebar colapsável + overlay mobile ---------- */
+$('btnSidebarToggle').addEventListener('click', () => {
+  const s = $('sidebar');
+  s.classList.toggle('colapsada');
+  $('btnSidebarToggle').textContent = s.classList.contains('colapsada') ? '»' : '«';
+});
+$('btnSidebarMobile').addEventListener('click', () => $('sidebar').classList.toggle('aberta'));
+
+/* ---------- filtros globais (de/ate, grupo, status) ---------- */
+let _filtrosCarregados = false;
+async function carregarFiltrosGlobais() {
+  if (_filtrosCarregados) return;
+  const [cfg, vin] = await Promise.all([
+    fetch('/api/configuracao', {headers: authHeaders()}).then(r => r.json()).catch(() => ({})),
+    fetch('/api/vinculos', {headers: authHeaders()}).then(r => r.json()).catch(() => ({})),
+  ]);
+  const grupos = new Set((cfg.grupos || []).map(g => g.nome));
+  (vin.vinculos || []).forEach(v => { if (v.grupo) grupos.add(v.grupo); });
+  $('fxGrupo').innerHTML = '<option value="">Todos os grupos</option>' +
+    [...grupos].sort().map(n => '<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
+  _filtrosCarregados = true;
+}
+
+function periodoFiltros() {
+  return { de: $('fxDe').value, ate: $('fxAte').value,
+           grupo: $('fxGrupo').value, status: $('fxStatus').value };
+}
+
+function aplicarFiltrosGlobais() {
+  const f = periodoFiltros();
+  // repassa de/ate já suportados por /api/pontos?de=&ate= e /api/espelho
+  if (f.de) { $('fDe').value = f.de; $('espDe').value = f.de; $('data').value = f.de; }
+  if (f.ate) { $('fAte').value = f.ate; $('espAte').value = f.ate; }
+  carregarKpisPainel();
+  carregarGeral();
+  carregarHistorico();
+}
+
+/* atalhos rápidos de data + auto-aplicar nos seletores (barra unificada) */
+function marcarAtalho(id) {
+  ['btnRapidoHoje', 'btnRapido7', 'btnRapido30', 'btnRapidoCustom'].forEach(b => {
+    const el = $(b); if (el) el.classList.toggle('ativo', b === id);
+  });
+}
+function setPeriodoRapido(dias) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const de = new Date(hoje + 'T12:00:00');
+  de.setDate(de.getDate() - (dias - 1));
+  $('fxDe').value = dias ? de.toISOString().slice(0, 10) : hoje;
+  $('fxAte').value = hoje;
+  $('data').value = hoje;
+}
+$('btnRapidoHoje').addEventListener('click', () => { marcarAtalho('btnRapidoHoje'); setPeriodoRapido(1); aplicarFiltrosGlobais(); });
+$('btnRapido7').addEventListener('click', () => { marcarAtalho('btnRapido7'); setPeriodoRapido(7); aplicarFiltrosGlobais(); });
+$('btnRapido30').addEventListener('click', () => { marcarAtalho('btnRapido30'); setPeriodoRapido(30); aplicarFiltrosGlobais(); });
+$('btnRapidoCustom').addEventListener('click', () => { marcarAtalho('btnRapidoCustom'); $('fxDe').focus(); });
+['fxDe', 'fxAte', 'fxGrupo', 'fxStatus'].forEach(id =>
+  $(id).addEventListener('change', () => { marcarAtalho('btnRapidoCustom'); aplicarFiltrosGlobais(); }));
+
+/* ---------- KPIs do topo (reutiliza kpiCard) ---------- */
+async function carregarKpisPainel() {
+  const f = periodoFiltros();
+
+  // uma chamada só ao resumo do espelho (mata o N+1 de /api/espelho por colaborador)
+  const r = await fetch('/api/espelho/resumo?de=' + encodeURIComponent(f.de || '') +
+          '&ate=' + encodeURIComponent(f.ate || '') + '&grupo=' + encodeURIComponent(f.grupo || ''),
+          {headers: authHeaders()}).then(x => x.json()).catch(() => ({}));
+  const t = r.totais || {};
+  const impares = t.dias_impares || 0;
+  const extrasMin = (t.extra_50_min || 0) + (t.extra_100_min || 0);
+  const semBio = t.sem_biometria || 0;
+  // linha 1 "Operação em Tempo Real" (duplicado "presentes hoje" eliminado)
+  $('cImpares').textContent = impares;
+  $('cSemBio').textContent = semBio;
+  $('sSemBio').textContent = semBio === 1 ? 'colaborador pendente' : 'colaboradores pendentes';
+  const badge = $('cExtrasBadge');
+  if (extrasMin > 0) { badge.hidden = false; badge.textContent = '+' + fmtH(extrasMin * 60) + ' extras'; }
+  else badge.hidden = true;
+}
+
+/* ---------- aba Espelho: pareamento + drawer de ajuste ---------- */
+let _espelhoAtual = null;   // colaborador/dia aberto no drawer
+let _espelhoFoco = null;    // colaborador pré-selecionado ao vir do inspetor do dia
+
+async function carregarEspelho() {
+  await carregarFiltrosGlobais();
+  await carregarDropdownColaboradores();
+  const sel = $('espColab');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Selecione o colaborador</option>' +
+    colaboradoresCache.map(n => '<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
+  sel.value = atual || _espelhoFoco || $('fColab').value || '';
+  _espelhoFoco = null;
+  if (!sel.value && colaboradoresCache.length) sel.value = colaboradoresCache[0];
+  await buscarEspelho();
+}
+
+async function buscarEspelho() {
+  const nome = $('espColab').value;
+  if (!nome) { $('resumoEspelho').hidden = true; $('tabEspelho').innerHTML = '<tr><td colspan="8"><div class="vazio">selecione um colaborador</div></td></tr>'; return; }
+  const f = periodoFiltros();
+  const de = $('espDe').value || f.de || '';
+  const ate = $('espAte').value || f.ate || '';
+  const e = await fetch('/api/espelho?colaborador='+encodeURIComponent(nome) +
+    (de ? '&de='+de : '') + (ate ? '&ate='+ate : ''), {headers: authHeaders()}).then(r => r.json());
+  renderEspelho(nome, e);
+}
+
+/* Espelho: janela de pareamento de 2 min — excedentes colapsados num único badge */
+const JANELA_PAREAMENTO_SEG = 120;
+let _espelhoExcedentes = {};   // data -> excedentes do dia p/ modal de auditoria
+
+function hojeISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fmtMin(m) {
+  m = m || 0;
+  const h = Math.floor(m / 60), r = m % 60;
+  return (h < 10 ? '0' : '') + h + ':' + (r < 10 ? '0' : '') + r;
+}
+function rotuloTipo(t) {
+  return { entrada: 'Entrada', pausa: 'Início Intervalo', volta: 'Fim Intervalo', termino: 'Saída' }[t] || t;
+}
+function segDoDia(q) {
+  return (+q.slice(11, 13)) * 3600 + (+q.slice(14, 16)) * 60 + (+q.slice(17, 19) || 0);
+}
+
+/* agrupa excedentes: dentro de 2 min de batida pareada = ignorada; fora = órfã */
+function excedentesDoDia(d) {
+  const p = d.pareamento || {};
+  const pareadas = [p.entrada, p.pausa, p.volta, p.termino].filter(Boolean).map(segDoDia);
+  const originais = {};
+  (d.batidas_originais || []).forEach(b => { originais[b.quando] = b; });
+  return (p.extras || []).map(x => {
+    const tipo = x[0], quando = x[1];
+    const s = segDoDia(quando);
+    const agrupada = pareadas.some(ps => Math.abs(ps - s) <= JANELA_PAREAMENTO_SEG);
+    const o = originais[quando] || {};
+    return {
+      tipo, quando, fonte: o.fonte || '—', nsr: o.nsr || null, id: o.id || null,
+      motivo: agrupada ? 'agrupada — dentro de 2 min de batida pareada' : 'órfã — sem par na janela de 2 min',
+    };
+  });
+}
+
+/* STATUS: verde se 4 slots · azul hoje sem saída · vermelho/âmbar só passados com par em falta */
+function statusEspelho(d) {
+  const p = d.pareamento || {};
+  const completo = !!(p.entrada && p.pausa && p.volta && p.termino);
+  const hoje = hojeISO();
+  if (d.abono) return { cls: 'ok', lbl: 'Abonado' };
+  if (completo) return { cls: 'ok', lbl: 'Regular / Completo' };
+  if (d.data >= hoje) return { cls: 'info', lbl: 'Em andamento' };
+  const faltando = p.faltando || [];
+  if (faltando.includes('entrada') || faltando.includes('termino')) return { cls: 'perigo', lbl: 'Incompleto' };
+  return { cls: 'aviso', lbl: 'Batida ímpar' };
+}
+
+function renderResumoEspelho(dias, tot) {
+  $('resumoEspelho').hidden = false;
+  const trabalhados = dias.filter(d => ((d.apuracao || {}).trabalhou_min || 0) > 0).length;
+  const pendencias = dias.filter(d => {
+    const p = d.pareamento || {};
+    return !d.abono && d.data < hojeISO() && (p.faltando || []).length > 0;
+  }).length;
+  $('rsDias').textContent = String(trabalhados || tot.dias || 0);
+  $('rsNormais').textContent = fmtMin(tot.regular_min);
+  $('rsExtra50').textContent = fmtMin(tot.extra_50_min);
+  $('rsExtra100').textContent = fmtMin(tot.extra_100_min);
+  $('rsNoturno').textContent = fmtMin(tot.noturno_min);
+  $('rsPendencias').textContent = String(pendencias);
+}
+
+function renderEspelho(nome, e) {
+  const dias = e.dias || [];
+  _espelhoExcedentes = {};
+  renderResumoEspelho(dias, e.totais || {});
+  if (!dias.length) {
+    $('tabEspelho').innerHTML = '<tr><td colspan="8"><div class="vazio">sem batidas no período</div></td></tr>';
+    return;
+  }
+  const safe = escJS(nome);
+  $('tabEspelho').innerHTML = dias.map(d => {
+    const p = d.pareamento || {}, ap = d.apuracao || {};
+    const slot = (rot, q, tipo) => '<span class="slot t-' + tipo + (q ? '' : ' vazio') + '"><span class="rotulo">' + rot + '</span>' + (q ? hm(q) : '—') + '</span>';
+    // linha mostra SÓ a timeline principal — excedentes viram 1 badge com modal
+    const slots = slot('Entrada', p.entrada, 'entrada') + '<span class="seta">→</span>' +
+      slot('Início Intervalo', p.pausa, 'pausa') + '<span class="seta">→</span>' +
+      slot('Fim Intervalo', p.volta, 'volta') + '<span class="seta">→</span>' +
+      slot('Saída', p.termino, 'termino');
+    const exc = excedentesDoDia(d);
+    if (exc.length) _espelhoExcedentes[d.data] = exc;
+    const badgeExc = exc.length
+      ? '<button type="button" class="extras-badge" onclick="verExcedentes(\'' + safe + '\', \'' + escJS(d.data) + '\')">+ ' +
+        exc.length + ' batidas ignoradas/órfãs (Ver detalhes)</button>'
+      : '';
+    const st = statusEspelho(d);
+    return '<tr>'+
+      '<td class="mono">'+d.data+'</td>'+
+      '<td><div class="pareamento-cel"><div class="slots">'+slots+'</div>'+badgeExc+'</div></td>'+
+      '<td><span class="badge '+st.cls+'">'+st.lbl+'</span></td>'+
+      '<td class="mono" style="color:var(--ok)">'+fmt(ap.extra_50_min ? ap.extra_50_min*60 : 0)+'</td>'+
+      '<td class="mono" style="color:var(--ok)">'+fmt(ap.extra_100_min ? ap.extra_100_min*60 : 0)+'</td>'+
+      '<td class="mono" style="color:var(--amb)">'+fmt(ap.noturno_min ? ap.noturno_min*60 : 0)+'</td>'+
+      '<td class="mono" style="color:var(--mut)">'+fmt(ap.almoco_min ? ap.almoco_min*60 : 0)+'</td>'+
+      '<td><button class="btn btn-ajustar" '+
+        'onclick="abrirDrawerAjuste(\''+safe+'\', \''+escJS(d.data)+'\')" title="Ajustar / Vincular Ponto">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">'+
+        '<path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>'+
+        'Ajustar / Vincular Ponto</button></td>'+
+    '</tr>';
+  }).join('');
+}
+
+async function verExcedentes(nome, data) {
+  const exc = _espelhoExcedentes[data] || [];
+  $('excTitulo').textContent = nome + ' · ' + data;
+  $('excLista').innerHTML = '<div class="vazio" style="padding:12px">carregando…</div>';
+  $('modalExcedentes').hidden = false;
+  const a = await fetch('/api/pontos/ajustes?colaborador=' + encodeURIComponent(nome),
+    {headers: authHeaders()}).then(r => r.json()).catch(() => ({ajustes: []}));
+  const porChave = {};
+  (a.ajustes || []).forEach(aj => {
+    if (aj.quando) porChave[aj.quando] = aj;
+    if (aj.ponto_id != null) porChave['id:' + aj.ponto_id] = aj;
+  });
+  $('excLista').innerHTML = exc.map(x => {
+    const aj = porChave[x.quando] || (x.id != null ? porChave['id:' + x.id] : null);
+    return '<div class="aud-item">' +
+      '<div class="quando">' + esc(hm(x.quando)) + ' · ' + esc(rotuloTipo(x.tipo)) +
+        ' · fonte ' + esc(x.fonte) + (x.nsr ? ' · NSR ' + esc(String(x.nsr)) : '') + '</div>' +
+      '<div class="motivo">' + esc(x.motivo) +
+        (aj ? ' · ajuste: ' + esc(aj.motivo || '') + ' (' + esc(aj.usuario || 'rh') + ')' : '') +
+      '</div></div>';
+  }).join('') || '<div class="vazio" style="padding:12px">sem batidas excedentes</div>';
+}
+
+function fecharExcedentes() { $('modalExcedentes').hidden = true; }
+
+function abrirDrawerAjuste(nome, data) {
+  _espelhoAtual = { nome, data };
+  $('ajTitulo').textContent = 'Ajustar / Vincular Ponto';
+  $('ajSub').textContent = nome + ' · ' + data;
+  $('ajAcao').value = 'inclusao';
+  $('ajTipo').value = 'entrada';
+  $('ajQuando').value = data + 'T08:00';
+  $('ajPontoId').value = '';
+  $('ajMotivo').value = '';
+  carregarAuditoria(nome);
+  $('drawerAjuste').classList.add('aberto');
+}
+
+function fecharDrawerAjuste() {
+  $('drawerAjuste').classList.remove('aberto');
+  _espelhoAtual = null;
+}
+
+async function carregarAuditoria(nome) {
+  const a = await fetch('/api/pontos/ajustes?colaborador='+encodeURIComponent(nome),
+    {headers: authHeaders()}).then(r => r.json()).catch(() => ({ajustes: []}));
+  $('ajHistorico').innerHTML = (a.ajustes || []).map(x =>
+    '<div class="aud-item"><div class="quando">'+esc(x.criado_em)+' · '+esc(x.usuario||'rh')+' · '+esc(x.acao)+'</div>'+
+    '<div class="motivo">'+esc(x.motivo)+'</div></div>').join('') ||
+    '<div class="vazio" style="padding:12px">nenhum ajuste registrado</div>';
+}
+
+async function salvarAjuste() {
+  if (!_espelhoAtual) return;
+  const motivo = $('ajMotivo').value.trim();
+  if (!motivo) { toast('justificativa é obrigatória', 'aviso'); $('ajMotivo').focus(); return; }
+  const acao = $('ajAcao').value;
+  let quando = $('ajQuando').value || '';
+  if (acao === 'abono_falta') {
+    quando = quando.slice(0, 10);
+    if (!quando) { toast('informe a data do abono', 'aviso'); return; }
+  } else {
+    quando = quando.replace('T', ' ');
+    if (quando.length === 16) quando += ':00';
+    if (!quando) { toast('informe data e hora', 'aviso'); return; }
+  }
+  const body = { colaborador: _espelhoAtual.nome, quando, acao, motivo };
+  if (acao !== 'abono_falta') body.tipo_novo = $('ajTipo').value;
+  if (acao === 'reclassificacao') body.ponto_id = parseInt($('ajPontoId').value, 10) || null;
+  const r = await fetch('/api/pontos/ajuste', {
+    method: 'POST',
+    headers: Object.assign({'Content-Type': 'application/json'}, authHeaders()),
+    body: JSON.stringify(body),
+  }).catch(() => null);
+  if (!r || !r.ok) {
+    const d = r ? await r.json().catch(() => ({})) : {};
+    toast(d.detail || 'não foi possível registrar o ajuste', 'erro');
+    return;
+  }
+  toast('ajuste registrado com auditoria', 'ok');
+  await carregarAuditoria(_espelhoAtual.nome);
+  buscarEspelho();
+  carregarKpisPainel();
+}
+
+$('btnFecharDrawer').addEventListener('click', fecharDrawerAjuste);
+$('btnSalvarAjuste').addEventListener('click', salvarAjuste);
+$('btnEspelho').addEventListener('click', buscarEspelho);
+$('espColab').addEventListener('change', buscarEspelho);
+
+/* atalhos de período do espelho (ao lado do Carregar) */
+function setEspelhoPeriodo(de, ate) {
+  $('espDe').value = de;
+  $('espAte').value = ate;
+  buscarEspelho();
+}
+$('btnEspMes').addEventListener('click', () => {
+  const h = hojeISO();
+  setEspelhoPeriodo(h.slice(0, 8) + '01', h);
+});
+$('btnEspMesAnt').addEventListener('click', () => {
+  const ini = new Date(hojeISO() + 'T12:00:00');
+  ini.setDate(1);
+  ini.setMonth(ini.getMonth() - 1);
+  const fim = new Date(ini.getFullYear(), ini.getMonth() + 1, 0);
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  setEspelhoPeriodo(iso(ini), iso(fim));
+});
+$('btnEsp7').addEventListener('click', () => {
+  const h = hojeISO();
+  const d = new Date(h + 'T12:00:00');
+  d.setDate(d.getDate() - 6);
+  const iso = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  setEspelhoPeriodo(iso(d), h);
+});
+
+/* ---------- aba Vínculos (Bitrix / biometria / grupo) ---------- */
+async function carregarVinculos() {
+  await carregarFiltrosGlobais();
+  const [vin, cfg] = await Promise.all([
+    fetch('/api/vinculos', {headers: authHeaders()}).then(r => r.json()),
+    fetch('/api/configuracao', {headers: authHeaders()}).then(r => r.json()).catch(() => ({})),
+  ]);
+  const f = periodoFiltros();
+  const grupos = cfg.grupos || [];
+  const linhas = (vin.vinculos || []).filter(v => !f.grupo || v.grupo === f.grupo);
+  $('tabVinculos').innerHTML = linhas.map(v => {
+    const bio = v.biometria === 'ativa'
+      ? '<span class="badge ok">Ativa</span>'
+      : '<span class="badge aviso">Pendente</span>';
+    const opcoes = '<option value="">sem grupo</option>' +
+      grupos.map(g => '<option value="'+g.id+'"'+(g.id === v.grupo_id ? ' selected' : '')+'>'+esc(g.nome)+'</option>').join('');
+    const pend = (v.pendencias || []).length
+      ? (v.pendencias || []).map(p => '<span class="badge perigo" style="margin-right:4px">'+esc(p)+'</span>').join('')
+      : '<span class="badge ok">OK</span>';
+    return '<tr data-nome="'+esc(v.nome)+'">'+
+      '<td><div class="cell-nome">'+av(v.nome)+'<span class="nm">'+esc(v.nome)+'</span></div></td>'+
+      '<td><input type="text" class="vin-bitrix" value="'+esc(v.bitrix_id || '')+'" '+
+        'placeholder="ID Bitrix" style="padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card-2); color:var(--txt); width:130px"></td>'+
+      '<td>'+bio+' <a href="/cadastro.html" target="_blank" rel="noopener" class="loc">Capturar biometria</a></td>'+
+      '<td><select class="vin-grupo" style="padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--card-2); color:var(--txt)">'+opcoes+'</select></td>'+
+      '<td>'+pend+'</td>'+
+      '<td><button class="btn primary" style="padding:6px 12px; font-size:12px" '+
+        'onclick="salvarVinculos(this)">Salvar</button></td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="6"><div class="vazio">nenhum vínculo encontrado</div></td></tr>';
+}
+
+async function salvarVinculos(botao) {
+  const linha = botao.closest('tr[data-nome]');
+  if (!linha) return;
+  const nome = linha.dataset.nome;
+  const grupoEl = linha.querySelector('.vin-grupo'), bitrixEl = linha.querySelector('.vin-bitrix');
+  // grupo_id null explícito = remover vínculo; bitrix_id sempre atualiza o campo
+  const body = {
+    grupo_id: grupoEl.value === '' ? null : parseInt(grupoEl.value, 10),
+    bitrix_id: bitrixEl.value.trim(),
+  };
+  const r = await fetch('/api/colaborador/'+encodeURIComponent(nome)+'/vinculos', {
+    method: 'PUT',
+    headers: Object.assign({'Content-Type': 'application/json'}, authHeaders()),
+    body: JSON.stringify(body),
+  }).catch(() => null);
+  if (!r || !r.ok) { toast('não foi possível salvar o vínculo', 'erro'); return; }
+  toast('vínculo atualizado', 'ok');
+  carregarVinculos();
+  carregarKpisPainel();
+}
+
+/* ---------- exportação fiscal: AFD e AEJ ---------- */
+function baixarArquivo(nome, conteudo, tipo) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([conteudo], {type: tipo || 'text/plain'}));
+  a.download = nome;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function exportarAFD() {
+  const f = periodoFiltros();
+  const r = await fetch('/api/afd' + (f.de || f.ate
+    ? '?'+(f.de ? 'de='+f.de : '')+(f.de && f.ate ? '&' : '')+(f.ate ? 'ate='+f.ate : '') : ''),
+    {headers: authHeaders()}).catch(() => null);
+  if (!r || !r.ok) { toast('falha ao gerar AFD', 'erro'); return; }
+  const d = await r.json();
+  baixarArquivo('afd_'+(f.de || 'periodo')+'.txt', d.afd || '');
+  toast('AFD gerado (' + (d.total_marcacoes || 0) + ' marcações)', 'ok');
+}
+
+async function exportarAEJ() {
+  const f = periodoFiltros();
+  const r = await fetch('/api/aej' + (f.de || f.ate
+    ? '?'+(f.de ? 'de='+f.de : '')+(f.de && f.ate ? '&' : '')+(f.ate ? 'ate='+f.ate : '') : ''),
+    {headers: authHeaders()}).catch(() => null);
+  if (!r || !r.ok) { toast('falha ao gerar AEJ', 'erro'); return; }
+  const d = await r.json();
+  baixarArquivo('aej_'+(f.de || 'periodo')+'.aej', d.aej || '');
+  toast('AEJ gerado (' + (d.total_marcacoes || 0) + ' marcações)', 'ok');
+}
+
+$('btnExportAfd').addEventListener('click', exportarAFD);
+$('btnExportAej').addEventListener('click', exportarAEJ);
+
+/* ---------- relatório Espelho de Ponto (PDF via impressão nativa) ---------- */
+function espelhoGraficoSvg(dias) {
+  if (!dias.length) return '';
+  const cores = { entrada: '#4F46E5', pausa: '#059669', volta: '#D97706', termino: '#E11D48' };
+  const dados = dias.map(d => {
+    const cont = { entrada: 0, pausa: 0, volta: 0, termino: 0 };
+    (d.batidas_efetivas || []).forEach(b => { if (cont[b.tipo] !== undefined) cont[b.tipo]++; });
+    return { data: d.data, cont };
+  });
+  const maxTotal = Math.max(4, ...dados.map(x => x.cont.entrada + x.cont.pausa + x.cont.volta + x.cont.termino));
+  const W = 720, H = 130, padB = 26, padT = 10, padL = 4;
+  const slot = (W - padL * 2) / dados.length;
+  const barW = Math.min(26, Math.max(6, slot - 4));
+  const usable = H - padB - padT;
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" xmlns="http://www.w3.org/2000/svg">';
+  svg += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padL) + '" y2="' + (H - padB) + '" stroke="#E2E8F0" stroke-width="1"/>';
+  dados.forEach((x, i) => {
+    const bx = padL + i * slot + (slot - barW) / 2;
+    let y = H - padB;
+    ['entrada', 'pausa', 'volta', 'termino'].forEach(t => {
+      const v = x.cont[t];
+      if (!v) return;
+      const h = Math.max(3, Math.round(v / maxTotal * usable));
+      y -= h;
+      svg += '<rect x="' + bx.toFixed(1) + '" y="' + y + '" width="' + barW + '" height="' + h + '" fill="' + cores[t] + '" rx="2"/>';
+    });
+    svg += '<text x="' + (bx + barW / 2).toFixed(1) + '" y="' + (H - padB + 13) + '" text-anchor="middle" font-size="9" fill="#64748B">' + esc(x.data.slice(8, 10)) + '</text>';
+    if (x.data.slice(8, 10) === '01' || i === 0) {
+      svg += '<text x="' + (bx + barW / 2).toFixed(1) + '" y="' + (H - padB + 23) + '" text-anchor="middle" font-size="8" fill="#94A3B8">' + esc(x.data.slice(5, 7)) + '/' + esc(x.data.slice(2, 4)) + '</text>';
+    }
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function espelhoBadge(d) {
+  const p = d.pareamento || {}, ap = d.apuracao || {}, fl = d.flags || [];
+  if (fl.includes('batida_impar') || fl.includes('orfa')) {
+    return { cls: 'perigo', lbl: fl.includes('batida_impar') ? 'Ímpar' : 'Órfã' };
+  }
+  if (ap.status === 'AUSENTE' || (ap.trabalhou_min === 0 && !d.abono)) {
+    return { cls: 'perigo', lbl: 'Falta' };
+  }
+  if (d.abono) return { cls: 'ok', lbl: 'Abonado' };
+  if (fl.includes('almoco_suprimido') || fl.includes('teto_excedido') ||
+      fl.includes('interjornada_insuficiente') || (p.faltando || []).length ||
+      ap.status === 'DEFICIT' || (d.atraso_min || 0) > 0) {
+    return { cls: 'aviso', lbl: 'Tolerância' };
+  }
+  return { cls: 'ok', lbl: 'Regular' };
+}
+
+function espelhoRelatorioHtml(nome, e, vin, cfg) {
+  const dias = e.dias || [];
+  const tot = e.totais || {};
+  const emp = (cfg && cfg.empresa) || empresa || {};
+  const raz = emp.razao_social || '—';
+  const cnpj = emp.id ? formatCNPJ(emp.id) : '—';
+  const grupoNome = vin.grupo || '—';
+  const grupos = (cfg && cfg.grupos) || [];
+  const g = grupos.find(x => x.nome === grupoNome);
+  const escala = g
+    ? (g.entrada + '–' + g.saida + (g.almoco_min ? ' · almoço ' + g.almoco_min + 'min' : '') +
+       ' · ' + (g.dias || []).map(d => ['seg','ter','qua','qui','sex','sáb','dom'][d] || d).join('/'))
+    : '—';
+  const cpf = vin.cpf || '—';
+  const fmtData = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '—';
+  const periodo = fmtData(e.de) + ' – ' + fmtData(e.ate);
+  const minutos = m => { m = m || 0; const h = Math.floor(m / 60), r = m % 60; return (h < 10 ? '0' : '') + h + ':' + (r < 10 ? '0' : '') + r; };
+  const totalBatidas = dias.reduce((s, d) => s + (d.pareamento && d.pareamento.registradas || (d.batidas_efetivas || []).length), 0);
+
+  const kpis = [
+    { v: totalBatidas, l: 'Batidas', c: 'k-slate' },
+    { v: tot.dias || 0, l: 'Dias trabalhados', c: 'k-slate' },
+    { v: minutos((tot.extra_50_min || 0) + (tot.extra_100_min || 0)), l: 'Horas extras', c: 'k-ok' },
+    { v: minutos(tot.deficit_min), l: 'Déficit', c: 'k-bad' },
+    { v: minutos(tot.noturno_min), l: 'Noturno', c: 'k-blue' },
+    { v: minutos(dias.reduce((s, d) => s + ((d.apuracao || {}).almoco_suprimido_min || 0), 0)), l: 'Almoço suprimido', c: 'k-amb' },
+  ].map(k =>
+    '<div class="kpi ' + k.c + '"><div class="kpi-lbl">' + esc(k.l) + '</div><div class="kpi-val">' + esc(String(k.v)) + '</div></div>'
+  ).join('');
+
+  const linhas = dias.map(d => {
+    const p = d.pareamento || {}, ap = d.apuracao || {};
+    const slot = (rot, q) => '<span class="slot' + (q ? '' : ' vazio') + '"><span class="rotulo">' + rot + '</span>' + (q ? hm(q) : '—') + '</span>';
+    const slots = slot('Entrada', p.entrada) + '<span class="seta">→</span>' +
+      slot('Início Intervalo', p.pausa) + '<span class="seta">→</span>' +
+      slot('Fim Intervalo', p.volta) + '<span class="seta">→</span>' +
+      slot('Saída', p.termino) +
+      (p.extras || []).map(x => '<span class="slot orfa"><span class="rotulo">Órfã</span>' + hm(x[1]) + '</span>').join('');
+    const b = espelhoBadge(d);
+    const atraso = (d.atraso_min != null) ? (d.atraso_min + ' min') : '—';
+    return '<tr>' +
+      '<td class="mono">' + esc(d.data) + '</td>' +
+      '<td><div class="slots">' + slots + '</div></td>' +
+      '<td><span class="badge ' + b.cls + '">' + esc(b.lbl) + '</span></td>' +
+      '<td class="mono">' + esc(atraso) + '</td>' +
+      '<td class="mono ok-c">' + minutos(ap.extra_50_min) + '</td>' +
+      '<td class="mono ok-c">' + minutos(ap.extra_100_min) + '</td>' +
+      '<td class="mono amb-c">' + minutos(ap.noturno_min) + '</td>' +
+      '<td class="mono bad-c">' + minutos(ap.deficit_min) + '</td>' +
+      '<td class="mono mut-c">' + minutos(ap.almoco_min) + '</td>' +
+    '</tr>';
+  }).join('');
+
+  const svg = espelhoGraficoSvg(dias);
+  const legenda = [['#4F46E5', 'Entrada'], ['#059669', 'Intervalo'], ['#D97706', 'Retorno'], ['#E11D48', 'Saída']]
+    .map(x => '<span class="leg-item"><span class="leg-dot" style="background:' + x[0] + '"></span>' + x[1] + '</span>').join('');
+
+  return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">' +
+    '<title>Espelho de Ponto — ' + esc(nome) + '</title><style>' +
+    '*{margin:0;padding:0;box-sizing:border-box}' +
+    'body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#0F172A;background:#fff;padding:32px 36px}' +
+    '@page{size:A4 portrait;margin:14mm}' +
+    '@media print{body{padding:0} .noprint{display:none}}' +
+    '.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0F172A;padding-bottom:14px;margin-bottom:16px}' +
+    '.emp{font-size:16px;font-weight:800;letter-spacing:-.2px}' +
+    '.emp small{display:block;font-size:11px;font-weight:500;color:#64748B;margin-top:3px}' +
+    '.doc{text-align:right;font-size:12px;color:#475569}' +
+    '.doc b{display:block;font-size:15px;color:#0F172A;margin-bottom:4px}' +
+    '.meta{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px;font-size:12.5px}' +
+    '.meta div b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#64748B;margin-bottom:3px;font-weight:700}' +
+    '.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}' +
+    '.kpi{border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;background:#F8FAFC}' +
+    '.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748B;margin-bottom:5px}' +
+    '.kpi-val{font-size:20px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1}' +
+    '.k-ok .kpi-val{color:#059669} .k-amb .kpi-val{color:#D97706} .k-bad .kpi-val{color:#E11D48}' +
+    '.k-blue .kpi-val{color:#4F46E5} .k-slate .kpi-val{color:#0F172A}' +
+    '.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#64748B;margin:18px 0 8px}' +
+    '.grafico{border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px 8px;background:#fff}' +
+    '.legenda{display:flex;gap:14px;margin-top:6px;font-size:11px;color:#475569}' +
+    '.leg-item{display:inline-flex;align-items:center;gap:5px}' +
+    '.leg-dot{width:9px;height:9px;border-radius:3px;display:inline-block}' +
+    'table{width:100%;border-collapse:collapse;font-size:11px}' +
+    'th,td{border:1px solid #E2E8F0;padding:6px 7px;text-align:center;vertical-align:middle}' +
+    'th{background:#F1F5F9;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:#334155;font-weight:700}' +
+    'td:first-child,th:first-child{text-align:left}' +
+    '.mono{font-variant-numeric:tabular-nums}' +
+    '.ok-c{color:#059669} .amb-c{color:#D97706} .bad-c{color:#E11D48} .mut-c{color:#64748B}' +
+    '.slots{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:center}' +
+    '.slot{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:7px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:10px;font-weight:600;white-space:nowrap}' +
+    '.slot .rotulo{font-size:8px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.3px}' +
+    '.slot.vazio{opacity:.5;border-style:dashed}' +
+    '.slot.orfa{border-color:#E11D48;background:#FFF1F2}' +
+    '.seta{color:#94A3B8;font-size:9px}' +
+    '.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700;border:1px solid}' +
+    '.badge.ok{background:#ECFDF5;color:#059669;border-color:#059669}' +
+    '.badge.aviso{background:#FFFBEB;color:#D97706;border-color:#D97706}' +
+    '.badge.perigo{background:#FFF1F2;color:#E11D48;border-color:#E11D48}' +
+    '.totais{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}' +
+    '.totais .kpi{background:#F8FAFC}' +
+    '.nota{margin-top:18px;font-size:10.5px;color:#475569;border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;background:#F8FAFC;line-height:1.55}' +
+    '.nota b{color:#0F172A}' +
+    '.ass{display:flex;gap:40px;margin-top:48px;justify-content:space-between}' +
+    '.ass div{flex:1;text-align:center;font-size:11px;color:#475569}' +
+    '.ass .lin{border-top:1px solid #0F172A;padding-top:6px;margin-top:36px}' +
+    '.foot{margin-top:32px;font-size:9.5px;color:#94A3B8;text-align:center;border-top:1px solid #E2E8F0;padding-top:10px}' +
+    '</style></head><body>' +
+    '<div class="head">' +
+      '<div class="emp">' + esc(raz) + '<small>CNPJ ' + esc(cnpj) + '</small></div>' +
+      '<div class="doc"><b>Espelho de Ponto</b>Período: ' + esc(periodo) + '<br>Emitido em ' + esc(new Date().toLocaleString('pt-BR')) + '</div>' +
+    '</div>' +
+    '<div class="meta">' +
+      '<div><b>Colaborador</b>' + esc(nome) + '</div>' +
+      '<div><b>CPF</b>' + esc(cpf) + '</div>' +
+      '<div><b>Grupo / Escala</b>' + esc(grupoNome) + '</div>' +
+      '<div><b>Horário de referência</b>' + esc(escala) + '</div>' +
+    '</div>' +
+    '<div class="kpis">' + kpis + '</div>' +
+    (svg ? '<div class="sec-title">Distribuição de batidas por tipo</div>' +
+      '<div class="grafico">' + svg + '<div class="legenda">' + legenda + '</div></div>' : '') +
+    '<div class="sec-title">Apuração dia a dia</div>' +
+    '<table><thead><tr>' +
+      '<th>Data</th><th>Pareamento (Entrada → Intervalo → Retorno → Saída)</th><th>Status</th><th>Atraso</th>' +
+      '<th>Extra 50%</th><th>Extra 100%</th><th>Noturno</th><th>Déficit</th><th>Almoço</th>' +
+    '</tr></thead><tbody>' +
+    (linhas || '<tr><td colspan="9" style="color:#94A3B8">sem batidas no período</td></tr>') +
+    '</tbody></table>' +
+    '<div class="sec-title">Totais consolidados</div>' +
+    '<div class="totais">' +
+      '<div class="kpi k-slate"><div class="kpi-lbl">Trabalhado</div><div class="kpi-val">' + minutos(tot.trabalhado_min) + '</div></div>' +
+      '<div class="kpi k-slate"><div class="kpi-lbl">Regular</div><div class="kpi-val">' + minutos(tot.regular_min) + '</div></div>' +
+      '<div class="kpi k-ok"><div class="kpi-lbl">Extra 50%</div><div class="kpi-val">' + minutos(tot.extra_50_min) + '</div></div>' +
+      '<div class="kpi k-ok"><div class="kpi-lbl">Extra 100%</div><div class="kpi-val">' + minutos(tot.extra_100_min) + '</div></div>' +
+      '<div class="kpi k-blue"><div class="kpi-lbl">Noturno</div><div class="kpi-val">' + minutos(tot.noturno_min) + '</div></div>' +
+      '<div class="kpi k-bad"><div class="kpi-lbl">Déficit</div><div class="kpi-val">' + minutos(tot.deficit_min) + '</div></div>' +
+      '<div class="kpi k-ok"><div class="kpi-lbl">Banco de horas</div><div class="kpi-val">' +
+        ((tot.banco_min || 0) >= 0 ? '+' : '−') + minutos(Math.abs(tot.banco_min || 0)) + '</div></div>' +
+      '<div class="kpi k-amb"><div class="kpi-lbl">Interjornadas &lt; 11h</div><div class="kpi-val">' + esc(String(tot.interjornadas_insuficientes || 0)) + '</div></div>' +
+    '</div>' +
+    '<div class="nota"><b>Integridade das batidas originais:</b> as marcações originais são invioláveis — cada uma encadeia um hash (hash chain) com NSR fiscal.' +
+    ' Qualquer inclusão ou reclassificação entra como ajuste auditado, com justificativa obrigatória, usuário e data/hora registrados.' +
+    ' Órfãs e ímpares nunca são descartadas; apenas sinalizadas.' +
+    (tot.teto_semanal_excedido ? ' <b>Atenção:</b> teto semanal de extras (Art. 59) excedido no período.' : '') +
+    '</div>' +
+    '<div class="ass">' +
+      '<div><div class="lin">' + esc(nome) + '<br>Colaborador</div></div>' +
+      '<div><div class="lin">_________________________<br>Responsável (RH)</div></div>' +
+    '</div>' +
+    '<div class="foot">Documento gerado pelo sistema ' + esc(emp.modelo || 'Ponto Digital') + ' · ' +
+      esc(new Date().toISOString().slice(0, 19).replace('T', ' ')) + ' · batidas originais verificáveis via hash chain</div>' +
+    '</body></html>';
+}
+
+async function exportarEspelhoPdf() {
+  const nome = $('espColab').value;
+  if (!nome) { toast('selecione um colaborador', 'aviso'); $('espColab').focus(); return; }
+  const f = periodoFiltros();
+  const de = $('espDe').value || f.de || '';
+  const ate = $('espAte').value || f.ate || '';
+  const [e, vin, cfg] = await Promise.all([
+    fetch('/api/espelho?colaborador=' + encodeURIComponent(nome) +
+      (de ? '&de=' + de : '') + (ate ? '&ate=' + ate : ''), {headers: authHeaders()}).then(r => r.json()),
+    fetch('/api/vinculos', {headers: authHeaders()}).then(r => r.json()).catch(() => ({vinculos: []})),
+    fetch('/api/configuracao', {headers: authHeaders()}).then(r => r.json()).catch(() => ({})),
+  ]);
+  const v = (vin.vinculos || []).find(x => x.nome === nome) || {};
+  const html = espelhoRelatorioHtml(nome, e, v, cfg);
+  const w = window.open('', '_blank');
+  if (!w) { toast('permita pop-ups para imprimir o relatório', 'aviso'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 350);
+}
+
+$('btnEspelhoPdf').addEventListener('click', exportarEspelhoPdf);
+</script>
+</body>
+</html>
